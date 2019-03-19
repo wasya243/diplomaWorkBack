@@ -1,4 +1,5 @@
-import express = require('express');
+import express from 'express';
+
 import { getUsers, getUserById, deleteUser, updateUser, createUser } from './handlers';
 
 export const routes = express.Router();

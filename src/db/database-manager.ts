@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { createConnection, Connection } from 'typeorm';
 import { User } from './models/User';
 

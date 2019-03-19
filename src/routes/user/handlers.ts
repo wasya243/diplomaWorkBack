@@ -1,4 +1,5 @@
-import express = require('express');
+import express from 'express';
+
 import { DatabaseManager } from '../../db/database-manager';
 import { User } from '../../db/models/User';
 

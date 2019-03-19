@@ -1,9 +1,8 @@
 import 'reflect-metadata';
-
 import { Connection } from 'typeorm';
-import express = require('express');
-import path = require('path');
-import bodyParser = require('body-parser');
+import express from 'express';
+import * as path from 'path';
+import * as bodyParser from 'body-parser';
 
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
