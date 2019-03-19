@@ -1,74 +1,97 @@
-import pg = require('pg');
 import express = require('express');
+import { DatabaseManager } from './connection';
+import { User } from './User';
 
 
-const { USER, HOST, DATABASE, PASSWORD } = process.env;
-const DB_PORT: number = parseInt(process.env.DB_PORT || '');
+export const getUsers = async (request: express.Request, response: express.Response) => {
 
-const connectionConfig: pg.ConnectionConfig = {
-    user: USER,
-    host: HOST,
-    database: DATABASE,
-    password: PASSWORD,
-    port: DB_PORT
-};
-
-const pool = new pg.Pool(connectionConfig);
-
-export const getUsers = (request: express.Request, response: express.Response) => {
-    pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
-        if (error) {
-            throw error;
+    const connection = DatabaseManager.getConnection();
+    if (connection) {
+        try {
+            let userRepository = connection.getRepository(User);
+            let allUsers = await userRepository.find();
+            response.send(allUsers);
+        } catch (error) {
+            console.error(error);
         }
-        response.status(200).json(results.rows);
-    });
+    }
 };
 
-export const getUserById = (request: express.Request, response: express.Response) => {
+export const getUserById = async (request: express.Request, response: express.Response) => {
     const id = parseInt(request.params.id);
 
-    pool.query('SELECT * FROM users WHERE id = $1', [ id ], (error, results) => {
-        if (error) {
-            throw error;
-        }
-        response.status(200).json(results.rows);
-    });
-};
-
-export const createUser = (request: express.Request, response: express.Response) => {
-    const { name, email } = request.body;
-
-    pool.query('INSERT INTO users (name, email) VALUES ($1, $2)', [ name, email ], (error, results) => {
-        if (error) {
-            throw error;
-        }
-        response.status(201).send(`User added with ID: ${results.oid}`);
-    });
-};
-
-export const updateUser = (request: express.Request, response: express.Response) => {
-    const id = parseInt(request.params.id);
-    const { name, email } = request.body;
-
-    pool.query(
-        'UPDATE users SET name = $1, email = $2 WHERE id = $3',
-        [ name, email, id ],
-        (error, results) => {
-            if (error) {
-                throw error;
+    const connection = DatabaseManager.getConnection();
+    if (connection) {
+        try {
+            let userRepository = connection.getRepository(User);
+            let user = await userRepository.findOne({ id: id });
+            if (!user) {
+                return response.status(404).end();
             }
-            response.status(200).send(`User modified with ID: ${id}`);
+            response.send(user);
+        } catch (error) {
+            console.error(error);
         }
-    );
+    }
 };
 
-export const deleteUser = (request: express.Request, response: express.Response) => {
+export const createUser = async (request: express.Request, response: express.Response) => {
+    const { name, email } = request.body;
+    console.log(name, email);
+
+    const connection = DatabaseManager.getConnection();
+    if (connection) {
+        try {
+            let userRepository = connection.getRepository(User);
+            const user = new User();
+            user.name = name;
+            user.email = email;
+            let savedUser = await userRepository.save(user);
+            response.send(savedUser);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+};
+
+export const updateUser = async (request: express.Request, response: express.Response) => {
+    const id = parseInt(request.params.id);
+    const { name, email } = request.body;
+
+    const connection = DatabaseManager.getConnection();
+    if (connection) {
+        try {
+            let userRepository = connection.getRepository(User);
+            let userToUpdate = await userRepository.findOne(id);
+            if (!userToUpdate) {
+                return response.status(404).end();
+            }
+            name && (userToUpdate.name = name);
+            email && (userToUpdate.email = email);
+            await userRepository.save(userToUpdate);
+            response.send(userToUpdate);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+};
+
+
+export const deleteUser = async (request: express.Request, response: express.Response) => {
     const id = parseInt(request.params.id);
 
-    pool.query('DELETE FROM users WHERE id = $1', [ id ], (error, results) => {
-        if (error) {
-            throw error;
+    const connection = DatabaseManager.getConnection();
+    if (connection) {
+        try {
+            let userRepository = connection.getRepository(User);
+            let userToRemove = await userRepository.findOne(id);
+            if (!userToRemove) {
+                return response.status(404).end();
+            }
+            await userRepository.remove(userToRemove);
+            response.status(204).end();
+        } catch (error) {
+            console.error(error);
         }
-        response.status(200).send(`User deleted with ID: ${id}`);
-    });
+    }
 };
