@@ -8,23 +8,14 @@ import bodyParser = require('body-parser');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-import { DatabaseManager } from './connection';
-// import {getUserById, createUser, deleteUser, updateUser, getUsers} from './queries';
-import { getUsers, createUser, getUserById, deleteUser, updateUser } from './queries';
+import { DatabaseManager } from './src/db/database-manager';
+import { appRoutes } from './src/routes';
 
 const app: express.Application = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/', function (req: express.Request, res: express.Response) {
-    res.send('Hello World!');
-});
-
-app.get('/users', getUsers);
-app.get('/users/:id', getUserById);
-app.post('/users', createUser);
-app.put('/users/:id', updateUser);
-app.delete('/users/:id', deleteUser);
+app.use('/v1', appRoutes);
 
 const { SERVER_PORT } = process.env;
 

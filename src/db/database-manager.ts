@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { createConnection, Connection } from 'typeorm';
-import { User } from './User';
+import { User } from './models/User';
 
 const { USER, HOST, DATABASE, PASSWORD } = process.env;
 const DB_PORT: number = parseInt(process.env.DB_PORT || '');

@@ -1,6 +1,6 @@
 import express = require('express');
-import { DatabaseManager } from './connection';
-import { User } from './User';
+import { DatabaseManager } from '../../db/database-manager';
+import { User } from '../../db/models/User';
 
 
 export const getUsers = async (request: express.Request, response: express.Response) => {
