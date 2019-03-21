@@ -7,9 +7,9 @@ import { verifyPassword, encryptPassword, sign } from '../../auth';
 import { User } from '../../db/models/User';
 import { simpleUniqueId } from '../../lib/helpers';
 
-export async function signIn(request: express.Request, response: express.Response, next: express.NextFunction) {
+export async function signIn(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
-        const { password, email } = request.body;
+        const { password, email } = req.body;
         const connection = DatabaseManager.getConnection();
 
         if (connection) {
@@ -24,7 +24,7 @@ export async function signIn(request: express.Request, response: express.Respons
             user.sessionId = userPayload.sessionId;
             await userRepository.save(user);
 
-            response.send({
+            res.send({
                 accessToken,
                 userInfo: {
                     email: user.email,
@@ -38,23 +38,22 @@ export async function signIn(request: express.Request, response: express.Respons
     }
 }
 
-export async function signOut(request: myRequest, response: express.Response, next: express.NextFunction) {
+export async function signOut(req: myRequest, res: express.Response, next: express.NextFunction) {
     try {
-        const id = request.userData.id;
+        const id = req.userData.id;
         const connection = DatabaseManager.getConnection();
 
         if (connection) {
             const userRepository = connection.getRepository(User);
             const user = await userRepository.findOne({ id: id });
             if (!user) {
-                // TODO: start using next() instead
-                return response.status(404).end();
+                return next();
             }
             // TODO: how to set null so not to get ts error?
             // @ts-ignore
             user.sessionId = null;
             await userRepository.save(user);
-            response.status(204).end();
+            res.status(204).end();
         }
 
     } catch (error) {
@@ -63,9 +62,9 @@ export async function signOut(request: myRequest, response: express.Response, ne
 }
 
 
-export async function signUp(request: express.Request, response: express.Response, next: express.NextFunction) {
+export async function signUp(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
-        const userInfo = request.body;
+        const userInfo = req.body;
         const connection = DatabaseManager.getConnection();
 
         if (connection) {
@@ -77,7 +76,7 @@ export async function signUp(request: express.Request, response: express.Respons
 
             userInfo.password = await encryptPassword(userInfo.password);
             const createdUser = await userRepository.save(userInfo);
-            response.send(createdUser);
+            res.send(createdUser);
         }
     } catch (error) {
         next(error);
