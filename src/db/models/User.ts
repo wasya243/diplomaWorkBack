@@ -20,7 +20,13 @@ export class User {
         // @ts-ignore
     email: string;
 
+    @Column({
+        nullable: true
+    })
+        // @ts-ignore
+    sessionId: string | null;
+
     @Column()
         // @ts-ignore
-    sessionId: string;
+    password: string;
 }
