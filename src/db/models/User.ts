@@ -1,6 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-
 @Entity()
 export class User {
 
@@ -24,7 +23,7 @@ export class User {
         nullable: true
     })
         // @ts-ignore
-    sessionId: string | null;
+    sessionId: string;
 
     @Column()
         // @ts-ignore

@@ -24,5 +24,3 @@ connectionPromise && connectionPromise.then((connection: Connection) => {
     DatabaseManager.setConnection(connection);
     app.listen(SERVER_PORT, () => console.log(`Example app listening on port ${SERVER_PORT}!`));
 });
-
-

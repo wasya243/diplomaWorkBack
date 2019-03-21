@@ -50,8 +50,11 @@ export async function signOut(request: myRequest, response: express.Response, ne
                 // TODO: start using next() instead
                 return response.status(404).end();
             }
+            // TODO: how to set null so not to get ts error?
+            // @ts-ignore
             user.sessionId = null;
             await userRepository.save(user);
+            response.status(204).end();
         }
 
     } catch (error) {

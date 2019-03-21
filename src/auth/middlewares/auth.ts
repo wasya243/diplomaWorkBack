@@ -30,6 +30,7 @@ export async function authMiddleware(request: myRequest, response: express.Respo
             }
             // add user id on the request object to be reused later in handlers
             request.userData = { id: user.id };
+            next();
         } catch (error) {
             if (error.name === 'TokenExpiredError') {
                 return next({ ...error, status: 401 });

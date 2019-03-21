@@ -11,4 +11,4 @@ routes.post('/auth/sign-out', authMiddleware, signOut);
 
 routes.post('/auth/sign-in', signIn);
 
-routes.post('auth/sign-up', signUp);
+routes.post('/auth/sign-up', signUp);
