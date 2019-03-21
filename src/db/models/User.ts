@@ -19,4 +19,8 @@ export class User {
     })
         // @ts-ignore
     email: string;
+
+    @Column()
+        // @ts-ignore
+    sessionId: string;
 }
