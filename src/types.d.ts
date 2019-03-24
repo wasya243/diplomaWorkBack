@@ -30,3 +30,18 @@ export interface RawPermission {
         name: string;
     };
 }
+
+export interface RawJoiValidationError {
+    context: {
+        key: string;
+        label: string;
+    },
+    message: string;
+    path: Array<string>,
+    type: string;
+}
+
+export interface ProcessedJoiValidationError {
+    key: string;
+    message: string;
+}

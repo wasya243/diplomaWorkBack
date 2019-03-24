@@ -1,4 +1,4 @@
-import { RawPermission, ProcessedPermission } from '../types';
+import { RawPermission, ProcessedPermission, ProcessedJoiValidationError, RawJoiValidationError } from '../types';
 
 // this function is used to generate sessionId
 export function simpleUniqueId() {
@@ -13,4 +13,9 @@ export function processPermissions(rawPermissions: RawPermission[]): ProcessedPe
         resource: item.resource.name,
         id: item.id
     }));
+}
+
+// this method is used to process joi error
+export function composeJoiValidationError(errorDetails: RawJoiValidationError[]): ProcessedJoiValidationError[] {
+    return errorDetails.map(item => Object.assign({}, { key: item.context.key, message: item.message }));
 }
