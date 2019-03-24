@@ -2,7 +2,6 @@ import createHttpError = require('http-errors');
 import * as express from 'express';
 
 import { DatabaseManager } from '../../db/database-manager';
-import { myRequest } from '../../types';
 import { verifyPassword, encryptPassword, sign } from '../../auth';
 import { User } from '../../db/models';
 import { simpleUniqueId } from '../../lib/helpers';
@@ -38,8 +37,9 @@ export async function signIn(req: express.Request, res: express.Response, next: 
     }
 }
 
-export async function signOut(req: myRequest, res: express.Response, next: express.NextFunction) {
+export async function signOut(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
+        // @ts-ignore
         const id = req.userData.id;
         const connection = DatabaseManager.getConnection();
 
