@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { DatabaseManager } from '../../db/database-manager';
-import { User } from '../../db/models/User';
+import { User } from '../../db/models';
 
 
 export const getUsers = async (req: express.Request, res: express.Response, next: express.NextFunction) => {

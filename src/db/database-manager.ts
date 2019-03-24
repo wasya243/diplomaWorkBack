@@ -1,5 +1,6 @@
 import { createConnection, Connection } from 'typeorm';
-import { User } from './models/User';
+
+import { User, Action, Resource, Role, Permission } from './models';
 
 const { USER, HOST, DATABASE, PASSWORD } = process.env;
 const DB_PORT: number = parseInt(process.env.DB_PORT || '');
@@ -27,7 +28,11 @@ export class DatabaseManager {
                 password: PASSWORD,
                 database: DATABASE,
                 entities: [
-                    User
+                    User,
+                    Action,
+                    Resource,
+                    Role,
+                    Permission
                 ],
                 synchronize: true,
                 logging: false

@@ -4,7 +4,7 @@ import * as express from 'express';
 import { DatabaseManager } from '../../db/database-manager';
 import { myRequest } from '../../types';
 import { verifyPassword, encryptPassword, sign } from '../../auth';
-import { User } from '../../db/models/User';
+import { User } from '../../db/models';
 import { simpleUniqueId } from '../../lib/helpers';
 
 export async function signIn(req: express.Request, res: express.Response, next: express.NextFunction) {
