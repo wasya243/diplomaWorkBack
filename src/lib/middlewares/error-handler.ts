@@ -5,6 +5,8 @@ import * as express from 'express';
 export function errorHandlerMiddleware(error: any, req: express.Request, res: express.Response, next: express.NextFunction) {
     const { status = 500, message, name } = error;
 
+    console.error(error);
+
     const response = {
         status,
         message: STATUS_CODES[ status ] || 'Unknown error'
