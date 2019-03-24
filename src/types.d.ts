@@ -6,3 +6,27 @@ export interface myRequest extends express.Request {
         id: number;
     }
 }
+
+export interface ProcessedPermission {
+    id: number;
+    action: string;
+    role: string;
+    resource: string;
+}
+
+
+export interface RawPermission {
+    id: number;
+    action: {
+        id: number;
+        name: string;
+    };
+    role: {
+        id: number;
+        name: string;
+    };
+    resource: {
+        id: number;
+        name: string;
+    };
+}

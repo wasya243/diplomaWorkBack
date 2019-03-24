@@ -8,8 +8,10 @@ import * as bodyParser from 'body-parser';
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 import { DatabaseManager } from './src/db/database-manager';
+import { PermissionManager } from './src/db/permission-manager';
 import { appRoutes } from './src/routes';
 import { errorHandlerMiddleware } from './src/lib/middlewares';
+import { processPermissions } from './src/lib/helpers';
 
 const app: express.Application = express();
 app.use(bodyParser.json());
@@ -23,7 +25,17 @@ const { SERVER_PORT } = process.env;
 
 const connectionPromise = DatabaseManager.connect();
 
-connectionPromise && connectionPromise.then((connection: Connection) => {
-    DatabaseManager.setConnection(connection);
-    app.listen(SERVER_PORT, () => console.log(`Example app listening on port ${SERVER_PORT}!`));
+connectionPromise && connectionPromise.then(async (connection: Connection) => {
+    try {
+        DatabaseManager.setConnection(connection);
+        // load permissions into the memory
+        const rawPermissions = await PermissionManager.loadPermissions(connection);
+        const processedPermissions = processPermissions(rawPermissions || []);
+        PermissionManager.setPermissions(processedPermissions);
+        // after db connection is established & permissions are loaded into memory we can start up the server
+        app.listen(SERVER_PORT, () => console.log(`Example app listening on port ${SERVER_PORT}!`));
+    } catch (error) {
+        console.error(error);
+        process.exit(1);
+    }
 });
