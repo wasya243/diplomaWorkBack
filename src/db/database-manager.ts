@@ -14,7 +14,11 @@ export class DatabaseManager {
         }
     }
 
-    public static getConnection(): Connection | undefined {
+    public static getConnection(): Connection {
+        if (!DatabaseManager.connection) {
+            throw new Error('Connection to the database has not been established');
+        }
+
         return DatabaseManager.connection;
     }
 

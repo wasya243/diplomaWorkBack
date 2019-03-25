@@ -12,7 +12,11 @@ export class PermissionManager {
         }
     }
 
-    public static getPermissions(): ProcessedPermission[] | undefined {
+    public static getPermissions(): ProcessedPermission[] {
+        if (!PermissionManager.permissions) {
+            throw new Error('Permissions have not been loaded');
+        }
+
         return PermissionManager.permissions;
     }
 
