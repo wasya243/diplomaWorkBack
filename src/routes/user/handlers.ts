@@ -32,14 +32,19 @@ export const getUserById = async (req: express.Request, res: express.Response, n
 };
 
 export const createUser = async (req: express.Request, res: express.Response) => {
-    const { name, email } = req.body;
+    const { firstName, lastName, password, role, email } = req.body;
 
     try {
         const connection = DatabaseManager.getConnection();
         const userRepository = connection.getRepository(User);
         const user = new User();
-        user.name = name;
+
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.password = password;
+        user.role = role;
         user.email = email;
+
         const savedUser = await userRepository.save(user);
         res.send(savedUser);
     } catch (error) {
@@ -49,7 +54,7 @@ export const createUser = async (req: express.Request, res: express.Response) =>
 
 export const updateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const id = parseInt(req.params.id);
-    const { name, email } = req.body;
+    const { firstName, lastName, password, role, email } = req.body;
 
     try {
         const connection = DatabaseManager.getConnection();
@@ -58,8 +63,12 @@ export const updateUser = async (req: express.Request, res: express.Response, ne
         if (!userToUpdate) {
             return next();
         }
-        name && (userToUpdate.name = name);
+        firstName && (userToUpdate.firstName = firstName);
+        lastName && (userToUpdate.lastName = lastName);
+        role && (userToUpdate.role = role);
+        password && (userToUpdate.password = password);
         email && (userToUpdate.email = email);
+
         await userRepository.save(userToUpdate);
         res.send(userToUpdate);
     } catch (error) {

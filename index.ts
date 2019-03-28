@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Connection } from 'typeorm';
 import express from 'express';
+import cors from 'cors';
 import * as path from 'path';
 import * as bodyParser from 'body-parser';
 
@@ -14,6 +15,8 @@ import { errorHandlerMiddleware } from './src/lib/middlewares';
 import { processPermissions } from './src/lib/helpers';
 
 const app: express.Application = express();
+
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

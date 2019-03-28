@@ -13,7 +13,13 @@ export class User {
         length: 100
     })
         // @ts-ignore
-    name: string;
+    firstName: string;
+
+    @Column({
+        length: 100
+    })
+        // @ts-ignore
+    lastName: string;
 
     @Column({
         length: 100

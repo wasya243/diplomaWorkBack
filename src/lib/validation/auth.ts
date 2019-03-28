@@ -5,6 +5,14 @@ export const signUpSchema = {
         email: Joi.string().required(),
         password: Joi.string().required(),
         role: Joi.number().required(),
-        name: Joi.string().required()
+        firstName: Joi.string().required(),
+        lastName: Joi.string().required()
+    }
+};
+
+export const signInSchema = {
+    body: {
+        email: Joi.string().required(),
+        password: Joi.string().required()
     }
 };

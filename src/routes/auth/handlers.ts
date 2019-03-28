@@ -12,7 +12,7 @@ export async function signIn(req: express.Request, res: express.Response, next: 
         const connection = DatabaseManager.getConnection();
 
         const userRepository = connection.getRepository(User);
-        const user = await userRepository.findOne({ email });
+        const user = await userRepository.findOne({ email }, { relations: [ 'role' ] });
         if (!user || !await verifyPassword(password, user.password)) {
             return next({ status: 401 });
         }
@@ -26,8 +26,10 @@ export async function signIn(req: express.Request, res: express.Response, next: 
             accessToken,
             userInfo: {
                 email: user.email,
-                name: user.name,
-                id: user.id
+                firstName: user.firstName,
+                lastName: user.lastName,
+                id: user.id,
+                role: user.role.name
             }
         });
     } catch (error) {
