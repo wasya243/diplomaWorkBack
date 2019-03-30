@@ -3,6 +3,8 @@ import express from 'express';
 import { getUsers, getUserById, deleteUser, updateUser, createUser } from './handlers';
 import { checkPermission } from '../../auth/middlewares/permission';
 import { authMiddleware } from '../../auth';
+import { validate as createValidationMiddleWare } from '../../lib/middlewares';
+import { updateUserSchema } from '../../lib/validation';
 
 export const routes = express.Router();
 
@@ -13,6 +15,6 @@ routes.get('/users/:id', getUserById);
 
 routes.post('/users', createUser);
 
-routes.put('/users/:id', authMiddleware, checkPermission.update('updateUser'), updateUser);
+routes.put('/users/:id', authMiddleware, checkPermission.update('updateUser'), createValidationMiddleWare(updateUserSchema), updateUser);
 
 routes.delete('/users/:id', authMiddleware, checkPermission.delete('removeUser'), deleteUser);

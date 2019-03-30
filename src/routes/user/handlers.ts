@@ -3,13 +3,20 @@ import express from 'express';
 import { DatabaseManager } from '../../db/database-manager';
 import { User } from '../../db/models';
 
+// TODO: I should put response types somewhere
 
 export const getUsers = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const connection = DatabaseManager.getConnection();
         const userRepository = connection.getRepository(User);
-        const allUsers = await userRepository.find();
-        res.send(allUsers);
+        const allUsers = await userRepository.find({ select: [ 'id', 'firstName', 'lastName', 'email' ], relations: [ 'role' ] });
+        res.send(allUsers.map(user => Object.assign({}, {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role.name
+        })));
     } catch (error) {
         console.error(error);
     }
@@ -54,23 +61,31 @@ export const createUser = async (req: express.Request, res: express.Response) =>
 
 export const updateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const id = parseInt(req.params.id);
-    const { firstName, lastName, password, role, email } = req.body;
+    const userInfo = req.body;
 
     try {
         const connection = DatabaseManager.getConnection();
         const userRepository = connection.getRepository(User);
-        const userToUpdate = await userRepository.findOne(id);
+        const userToUpdate = await userRepository.findOne(id, { relations: [ 'role' ] });
         if (!userToUpdate) {
             return next();
         }
-        firstName && (userToUpdate.firstName = firstName);
-        lastName && (userToUpdate.lastName = lastName);
-        role && (userToUpdate.role = role);
-        password && (userToUpdate.password = password);
-        email && (userToUpdate.email = email);
+
+        const role = userToUpdate.role.name;
+
+        userToUpdate.firstName = userInfo.firstName;
+        userToUpdate.lastName = userInfo.lastName;
+        userToUpdate.role = userInfo.role;
+        userToUpdate.email = userInfo.email;
 
         await userRepository.save(userToUpdate);
-        res.send(userToUpdate);
+        res.send(Object.assign({}, {
+            firstName: userToUpdate.firstName,
+            lastName: userToUpdate.lastName,
+            email: userToUpdate.email,
+            id: userToUpdate.id,
+            role
+        }));
     } catch (error) {
         console.error(error);
     }
