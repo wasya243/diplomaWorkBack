@@ -30,3 +30,25 @@ export const deleteFaculty = async (req: express.Request, res: express.Response,
         next(error);
     }
 };
+
+
+export const updateFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const id = parseInt(req.params.id);
+    const facultyInfo = req.body;
+
+    try {
+        const connection = DatabaseManager.getConnection();
+        const facultyRepository = connection.getRepository(Faculty);
+        const facultyToUpdate = await facultyRepository.findOne(id);
+        if (!facultyToUpdate) {
+            return next();
+        }
+
+        Object.assign(facultyToUpdate, facultyInfo);
+        await facultyRepository.save(facultyToUpdate);
+
+        res.send(facultyToUpdate);
+    } catch (error) {
+        next(error);
+    }
+};

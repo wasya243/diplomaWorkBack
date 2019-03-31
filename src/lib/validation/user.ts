@@ -1,5 +1,6 @@
 import * as Joi from 'joi';
 
+// TODO: think of optional properties & regexp validation
 export const updateUserSchema = {
     body: {
         email: Joi.string().required(),
