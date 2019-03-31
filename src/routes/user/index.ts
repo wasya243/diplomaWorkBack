@@ -1,10 +1,10 @@
 import express from 'express';
 
-import { getUsers, getUserById, deleteUser, updateUser, createUser } from './handlers';
+import { getUsers, getUserById, deleteUser, updateUser, createUser, resetPassword } from './handlers';
 import { checkPermission } from '../../auth/middlewares/permission';
 import { authMiddleware } from '../../auth';
 import { validate as createValidationMiddleWare } from '../../lib/middlewares';
-import { updateUserSchema } from '../../lib/validation';
+import { updateUserSchema, resetPasswordSchema } from '../../lib/validation';
 
 export const routes = express.Router();
 
@@ -17,4 +17,8 @@ routes.post('/users', createUser);
 
 routes.put('/users/:id', authMiddleware, checkPermission.update('updateUser'), createValidationMiddleWare(updateUserSchema), updateUser);
 
+routes.put('/users/:id/reset-password', authMiddleware, checkPermission.update('reset-password'), createValidationMiddleWare(resetPasswordSchema), resetPassword);
+
 routes.delete('/users/:id', authMiddleware, checkPermission.delete('removeUser'), deleteUser);
+
+

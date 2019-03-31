@@ -7,3 +7,9 @@ export const updateUserSchema = {
         lastName: Joi.string().required()
     }
 };
+
+export const resetPasswordSchema = {
+    body: {
+        password: Joi.string().required()
+    }
+};

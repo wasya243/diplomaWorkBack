@@ -1,5 +1,6 @@
 import express from 'express';
 
+import { encryptPassword } from '../../auth';
 import { DatabaseManager } from '../../db/database-manager';
 import { User } from '../../db/models';
 
@@ -18,7 +19,7 @@ export const getUsers = async (req: express.Request, res: express.Response, next
             role: user.role.name
         })));
     } catch (error) {
-        console.error(error);
+        next(error);
     }
 };
 
@@ -34,11 +35,11 @@ export const getUserById = async (req: express.Request, res: express.Response, n
         }
         res.send(user);
     } catch (error) {
-        console.error(error);
+        next(error);
     }
 };
 
-export const createUser = async (req: express.Request, res: express.Response) => {
+export const createUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { firstName, lastName, password, role, email } = req.body;
 
     try {
@@ -55,7 +56,7 @@ export const createUser = async (req: express.Request, res: express.Response) =>
         const savedUser = await userRepository.save(user);
         res.send(savedUser);
     } catch (error) {
-        console.error(error);
+        next(error);
     }
 };
 
@@ -87,7 +88,7 @@ export const updateUser = async (req: express.Request, res: express.Response, ne
             role
         }));
     } catch (error) {
-        console.error(error);
+        next(error);
     }
 };
 
@@ -105,6 +106,28 @@ export const deleteUser = async (req: express.Request, res: express.Response, ne
         await userRepository.remove(userToRemove);
         res.status(204).end();
     } catch (error) {
-        console.error(error);
+        next(error);
+    }
+};
+
+export const resetPassword = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const id = parseInt(req.params.id);
+    const newPassword = req.body.password;
+
+    try {
+        const connection = DatabaseManager.getConnection();
+        const userRepository = connection.getRepository(User);
+        const userToResetPassword = await userRepository.findOne(id);
+
+        if (!userToResetPassword) {
+            return next();
+        }
+        // TODO: send notification email
+        userToResetPassword.password = await encryptPassword(newPassword);
+        await userRepository.save(userToResetPassword);
+
+        res.status(200).end();
+    } catch (error) {
+        next(error);
     }
 };
