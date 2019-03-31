@@ -13,3 +13,20 @@ export const getFaculties = async (req: express.Request, res: express.Response, 
         next(error);
     }
 };
+
+export const deleteFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const id = parseInt(req.params.id);
+
+    try {
+        const connection = DatabaseManager.getConnection();
+        const facultyRepository = connection.getRepository(Faculty);
+        const facultyToRemove = await facultyRepository.findOne(id);
+        if (!facultyToRemove) {
+            return next();
+        }
+        await facultyRepository.remove(facultyToRemove);
+        res.status(204).end();
+    } catch (error) {
+        next(error);
+    }
+};
