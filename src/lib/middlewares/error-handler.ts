@@ -15,6 +15,7 @@ export function errorHandlerMiddleware(error: any, req: express.Request, res: ex
     };
 
     error.joiValidation && Object.assign(response, { data: composeJoiValidationError(error.data.details) });
+    error.name === 'NotFoundError' && Object.assign(response, { data: message });
 
     res.status(response.status).send(response);
 }

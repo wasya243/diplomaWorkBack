@@ -41,7 +41,7 @@ export const createClassroom = async (req: express.Request, res: express.Respons
 
         const savedClassroom = await classroomRepository.save(classroom);
 
-        res.send(savedClassroom);
+        res.send(Object.assign(savedClassroom, { faculty: savedClassroom.faculty.name }));
     } catch (error) {
         next(error);
     }

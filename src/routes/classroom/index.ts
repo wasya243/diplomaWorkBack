@@ -10,7 +10,7 @@ export const routes = express.Router();
 
 routes.get('/classrooms', authMiddleware, checkPermission.read('getAllClassrooms'), getClassrooms);
 
-routes.post('/classrooms', authMiddleware, checkPermission.update('createClassroom'), createValidationMiddleWare(createClassroomSchema), createClassroom);
+routes.post('/classrooms', authMiddleware, checkPermission.create('createClassroom'), createValidationMiddleWare(createClassroomSchema), createClassroom);
 
 routes.put('/classrooms/:id', authMiddleware, checkPermission.update('updateClassroom'), createValidationMiddleWare(updateClassroomSchema), updateClassroom);
 
