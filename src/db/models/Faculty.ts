@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Index, OneToMany } from 'typeorm';
+
+import { Classroom } from './Сlassroom';
 
 @Entity()
 export class Faculty {
@@ -28,5 +30,9 @@ export class Faculty {
     @Column()
         //@ts-ignore
     address: string;
+
+    @OneToMany(type => Classroom, classroom => classroom.faculty)
+        //@ts-ignore
+    classrooms: Classroom[];
 
 }
