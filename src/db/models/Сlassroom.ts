@@ -20,7 +20,7 @@ export class Classroom {
     amountOfSeats: number;
 
 
-    @ManyToOne(type => Faculty, faculty => faculty.classrooms)
+    @ManyToOne(type => Faculty, faculty => faculty.classrooms, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore
     faculty: Faculty;
 }
