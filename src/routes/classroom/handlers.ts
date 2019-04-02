@@ -14,7 +14,10 @@ export const getClassrooms = async (req: express.Request, res: express.Response,
             id: classroom.id,
             number: classroom.number,
             amountOfSeats: classroom.amountOfSeats,
-            faculty: classroom.faculty.name
+            faculty: {
+                name: classroom.faculty.name,
+                id: classroom.faculty.id
+            }
         })));
     } catch (error) {
         next(error);
@@ -41,7 +44,7 @@ export const createClassroom = async (req: express.Request, res: express.Respons
 
         const savedClassroom = await classroomRepository.save(classroom);
 
-        res.send(Object.assign(savedClassroom, { faculty: savedClassroom.faculty.name }));
+        res.send(Object.assign(savedClassroom, { faculty: { name: savedClassroom.faculty.name, id: savedClassroom.faculty.id } }));
     } catch (error) {
         next(error);
     }
@@ -76,7 +79,10 @@ export const updateClassroom = async (req: express.Request, res: express.Respons
             id: classroomToUpdate.id,
             number: classroomToUpdate.number,
             amountIOfSeats: classroomToUpdate.amountOfSeats,
-            faculty: classroomToUpdate.faculty.name
+            faculty: {
+                name: classroomToUpdate.faculty.name,
+                id: classroomToUpdate.faculty.id
+            }
         }));
     } catch (error) {
         next(error);
