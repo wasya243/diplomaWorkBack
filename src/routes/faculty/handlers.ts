@@ -52,3 +52,20 @@ export const updateFaculty = async (req: express.Request, res: express.Response,
         next(error);
     }
 };
+
+export const createFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const facultyInfo = req.body;
+
+    try {
+        const connection = DatabaseManager.getConnection();
+        const facultyRepository = connection.getRepository(Faculty);
+
+        const faculty = new Faculty();
+        Object.assign(faculty, facultyInfo);
+        const savedFaculty = await facultyRepository.save(faculty);
+
+        res.send(savedFaculty);
+    } catch (error) {
+        next(error);
+    }
+};
