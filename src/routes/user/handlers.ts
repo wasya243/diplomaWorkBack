@@ -1,5 +1,6 @@
 import express from 'express';
 
+import { sendResetPasswordEmail } from '../../../nodemailer.config';
 import { encryptPassword } from '../../auth';
 import { DatabaseManager } from '../../db/database-manager';
 import { User } from '../../db/models';
@@ -126,7 +127,18 @@ export const resetPassword = async (req: express.Request, res: express.Response,
         userToResetPassword.password = await encryptPassword(newPassword);
         await userRepository.save(userToResetPassword);
 
+
         res.status(200).end();
+
+        // TODO: handle this stuff separately
+        const context = {
+            name: userToResetPassword.firstName,
+            password: newPassword,
+            appName: 'diplomaWork',
+            email: userToResetPassword.email
+        };
+        await sendResetPasswordEmail(userToResetPassword.email, context);
+
     } catch (error) {
         next(error);
     }
