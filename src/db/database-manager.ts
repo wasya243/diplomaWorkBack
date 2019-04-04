@@ -1,6 +1,16 @@
 import { createConnection, Connection } from 'typeorm';
 
-import { User, Action, Resource, Role, Permission, Faculty, Classroom } from './models';
+import {
+    User,
+    Action,
+    Resource,
+    Role,
+    Permission,
+    Faculty,
+    Classroom,
+    Group,
+    DoubleLesson
+} from './models';
 
 const { USER, HOST, DATABASE, PASSWORD } = process.env;
 const DB_PORT: number = parseInt(process.env.DB_PORT || '');
@@ -38,7 +48,9 @@ export class DatabaseManager {
                     Role,
                     Permission,
                     Faculty,
-                    Classroom
+                    Classroom,
+                    Group,
+                    DoubleLesson
                 ],
                 synchronize: true,
                 logging: false

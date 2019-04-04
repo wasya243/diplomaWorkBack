@@ -7,6 +7,7 @@ export const getFaculties = async (req: express.Request, res: express.Response, 
     try {
         const connection = DatabaseManager.getConnection();
         const facultyRepository = connection.getRepository(Faculty);
+        // TODO: find a neat way to do this
         const allFaculties = await facultyRepository.find({ relations: [ 'classrooms' ] });
         res.send(allFaculties.map(faculty => Object.assign(faculty, { classrooms: faculty.classrooms.length })));
     } catch (error) {

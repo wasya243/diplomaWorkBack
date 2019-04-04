@@ -6,6 +6,8 @@ import { routes as permissionRoutes } from './permissions';
 import { routes as roleRoutes } from './roles';
 import { routes as facultyRoutes } from './faculty';
 import { routes as classroomRoutes } from './classroom';
+import { routes as groupRoutes } from './groups';
+import { routes as doubleLessonRoutes } from './double-lessons';
 
 export const appRoutes = express.Router();
 
@@ -15,4 +17,6 @@ appRoutes
     .use(roleRoutes)
     .use(facultyRoutes)
     .use(classroomRoutes)
+    .use(groupRoutes)
+    .use(doubleLessonRoutes)
     .use(authRoutes);

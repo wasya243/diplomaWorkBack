@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn, Index, OneToMany } from 'typeorm';
 
+import { Group } from './Group';
 import { Classroom } from './Сlassroom';
 
 @Entity()
@@ -35,4 +36,7 @@ export class Faculty {
         //@ts-ignore
     classrooms: Classroom[];
 
+    @OneToMany(type => Group, group => group.faculty)
+        //@ts-ignore
+    groups: Group[];
 }

@@ -1,8 +1,8 @@
 import express from 'express';
 
 import { authMiddleware } from '../../auth';
-import { getPermissions } from './handlers';
+import { getGroups } from './handlers';
 
 export const routes = express.Router();
 
-routes.get('/permissions', authMiddleware, getPermissions);
+routes.get('/groups', authMiddleware, getGroups);
