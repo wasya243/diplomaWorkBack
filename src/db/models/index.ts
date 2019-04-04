@@ -8,3 +8,4 @@ export * from './Сlassroom';
 export * from './Group';
 export * from './DoubleLesson';
 export * from './Request';
+export * from './Assignment';

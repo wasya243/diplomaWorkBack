@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Unique, OneToMany } 
 
 import { Faculty } from './Faculty';
 import { Request } from './Request';
+import { Assignment } from './Assignment';
 
 @Unique([ 'number', 'faculty.id' ])
 
@@ -28,4 +29,8 @@ export class Classroom {
     @OneToMany(type => Request, request => request.classroom)
         //@ts-ignore
     requests: Request[];
+
+    @OneToMany(type => Assignment, assignment => assignment.classroom)
+        //@ts-ignore
+    assignments: Assignment[];
 }

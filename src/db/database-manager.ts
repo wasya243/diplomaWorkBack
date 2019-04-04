@@ -10,7 +10,8 @@ import {
     Classroom,
     Group,
     DoubleLesson,
-    Request
+    Request,
+    Assignment
 } from './models';
 
 const { USER, HOST, DATABASE, PASSWORD } = process.env;
@@ -52,7 +53,8 @@ export class DatabaseManager {
                     Classroom,
                     Group,
                     DoubleLesson,
-                    Request
+                    Request,
+                    Assignment
                 ],
                 synchronize: true,
                 logging: false

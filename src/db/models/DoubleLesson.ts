@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany } from 'typeorm';
+import { Assignment } from './Assignment';
 
 @Entity()
 export class DoubleLesson {
@@ -20,4 +21,8 @@ export class DoubleLesson {
     @Column({ type: 'time' })
         //@ts-ignore
     end: string;
+
+    @OneToMany(type => Assignment, assignment => assignment.doubleLesson)
+        //@ts-ignore
+    assignments: Assignment[];
 }
