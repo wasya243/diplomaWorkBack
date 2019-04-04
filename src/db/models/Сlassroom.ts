@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Unique } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Unique, OneToMany } from 'typeorm';
 
 import { Faculty } from './Faculty';
+import { Request } from './Request';
 
 @Unique([ 'number', 'faculty.id' ])
 
@@ -23,4 +24,8 @@ export class Classroom {
     @ManyToOne(type => Faculty, faculty => faculty.classrooms, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore
     faculty: Faculty;
+
+    @OneToMany(type => Request, request => request.classroom)
+        //@ts-ignore
+    requests: Request[];
 }

@@ -8,6 +8,7 @@ import { routes as facultyRoutes } from './faculty';
 import { routes as classroomRoutes } from './classroom';
 import { routes as groupRoutes } from './groups';
 import { routes as doubleLessonRoutes } from './double-lessons';
+import { routes as requestRoutes } from './requests';
 
 export const appRoutes = express.Router();
 
@@ -19,4 +20,5 @@ appRoutes
     .use(classroomRoutes)
     .use(groupRoutes)
     .use(doubleLessonRoutes)
+    .use(requestRoutes)
     .use(authRoutes);

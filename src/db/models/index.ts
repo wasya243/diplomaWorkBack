@@ -6,4 +6,5 @@ export * from './Resource';
 export * from './Faculty';
 export * from './Сlassroom';
 export * from './Group';
-export * from './DoubleLesson'
+export * from './DoubleLesson';
+export * from './Request';
