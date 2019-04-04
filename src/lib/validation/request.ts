@@ -7,3 +7,10 @@ export const createRequestSchema = {
         end: Joi.string().isoDate().required()
     }
 };
+
+
+export const reviewRequestSchema = {
+    body: {
+        isApproved: Joi.boolean().required()
+    }
+};

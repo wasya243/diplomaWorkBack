@@ -38,3 +38,27 @@ export const createRequest = async (req: express.Request, res: express.Response,
         next(error);
     }
 };
+
+export const reviewRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const reviewInfo = req.body;
+    const requestId = req.params.id;
+
+    try {
+        const connection = DatabaseManager.getConnection();
+        const requestRepository = connection.getRepository(Request);
+
+        const requestToReview = await requestRepository.findOne(requestId);
+
+        if (!requestToReview) {
+            return next();
+        }
+
+        requestToReview.isApproved = reviewInfo.isApproved;
+
+        await requestRepository.save(requestToReview);
+
+        res.send(requestToReview);
+    } catch (error) {
+        next(error);
+    }
+};
