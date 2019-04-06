@@ -15,6 +15,7 @@ export const createAssignment = async (req: express.Request, res: express.Respon
         const doubleLessonRepository = connection.getRepository(DoubleLesson);
         const groupRepository = connection.getRepository(Group);
         const requestRepository = connection.getRepository(Request);
+        const assignmentRepository = connection.getRepository(Assignment);
 
         const doubleLesson = await doubleLessonRepository.findOne(doubleLessonId);
         const group = await groupRepository.findOne(groupId);
@@ -32,7 +33,7 @@ export const createAssignment = async (req: express.Request, res: express.Respon
             return next(createHttpError(404, `Classroom with provided id ${classroomId} does not exist`));
         }
 
-        // TODO: check if given classroom is not passed over to other faculty
+        // check if given classroom is not passed over to other faculty
         const requests = await requestRepository
             .createQueryBuilder('request')
             .where('request."classroomId" = :classroomId')
@@ -62,9 +63,29 @@ export const createAssignment = async (req: express.Request, res: express.Respon
             return next(createHttpError(400, `This ${classroomId} classroom cannot be used during this period start ${assignmentDateStart} end ${assignmentDateEnd} cause it was passed to other faculty`));
         }
 
-        // TODO: check if there is enough space left in classroom
+        // check if there is enough space left in classroom
+        const assignments = await assignmentRepository
+            .createQueryBuilder('assignment')
+            .where('assignment."classroomId" = :classroomId')
+            .andWhere('assignment.assignmentDate = :assignmentDate')
+            .setParameters({ classroomId: classroomId, assignmentDate: moment(assignmentDate).startOf('day').format() })
+            .innerJoinAndSelect('assignment.group', 'group')
+            .getMany();
+        const amountOfPeople = assignments.reduce((ac, cu) => ac + cu.group.amountOfPeople, 0);
 
-        res.status(200).end();
+        if ((classroom.amountOfSeats - amountOfPeople) < group.amountOfPeople) {
+            return next(createHttpError(400, `Classroom with id ${classroomId} has not enough space left for ${group.amountOfPeople} people in group with id ${group.id}`));
+        }
+
+        const assignment = new Assignment();
+        assignment.classroom = classroom;
+        assignment.doubleLesson = doubleLesson;
+        assignment.group = group;
+        assignment.assignmentDate = moment(assignmentDate).startOf('day').format();
+
+        await assignmentRepository.save(assignment);
+
+        res.send(assignment);
     } catch (error) {
         next(error);
     }
