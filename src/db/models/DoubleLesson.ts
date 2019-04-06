@@ -13,12 +13,12 @@ export class DoubleLesson {
     number: number;
 
     @Index({ unique: true })
-    @Column({ type: 'time' })
+    @Column({ type: 'timestamptz' })
         //@ts-ignore
     start: string;
 
     @Index({ unique: true })
-    @Column({ type: 'time' })
+    @Column({ type: 'timestamptz' })
         //@ts-ignore
     end: string;
 
