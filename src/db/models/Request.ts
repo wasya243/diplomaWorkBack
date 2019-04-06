@@ -12,21 +12,21 @@ export class Request {
         //@ts-ignore
     id: number;
 
-    @Column({ type: 'timestamp' })
+    @Column({ type: 'timestamptz' })
         //@ts-ignore
-    start: string;
+    start: Date;
 
-    @Column({ type: 'timestamp' })
+    @Column({ type: 'timestamptz' })
         //@ts-ignore
-    end: string;
+    end: Date;
 
     @Column({ type: 'boolean', default: false })
         //@ts-ignore
     isApproved: boolean;
 
-    @Column({ type: 'timestamp', default: moment().format() })
+    @Column({ type: 'timestamptz', default: moment(Date.now()).format() })
         //@ts-ignore
-    createdAt: string;
+    createdAt: Date;
 
     @ManyToOne(type => User, dispatcher => dispatcher.requests, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore

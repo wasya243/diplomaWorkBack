@@ -13,11 +13,11 @@ export class Assignment {
         //@ts-ignore
     id: number;
 
-    @Column({ type: 'timestamp' })
+    @Column({ type: 'timestamptz' })
         //@ts-ignore
     assignmentDate: string;
 
-    @Column({ type: 'timestamp', default: moment().format() })
+    @Column({ type: 'timestamptz', default: moment(Date.now()).format() })
         //@ts-ignore
     createdAt: string;
 

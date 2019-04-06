@@ -9,3 +9,4 @@ export * from './Group';
 export * from './DoubleLesson';
 export * from './Request';
 export * from './Assignment';
+export * from './A';
