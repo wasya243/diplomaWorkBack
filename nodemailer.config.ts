@@ -52,3 +52,17 @@ export function sendResetPasswordEmail(emailSendTo: string, context: any) {
 
     return smtpTransport.sendMail(data);
 }
+
+
+export function sendPermitRegistrationRequest(emailSendTo: string, context: any) {
+
+    const data = {
+        to: emailSendTo,
+        from: email,
+        template: 'permit-request-email',
+        subject: 'Access permitted.',
+        context
+    };
+
+    return smtpTransport.sendMail(data);
+}

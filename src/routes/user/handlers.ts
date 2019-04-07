@@ -11,7 +11,12 @@ export const getUsers = async (req: express.Request, res: express.Response, next
     try {
         const connection = DatabaseManager.getConnection();
         const userRepository = connection.getRepository(User);
-        const allUsers = await userRepository.find({ select: [ 'id', 'firstName', 'lastName', 'email' ], relations: [ 'role' ] });
+        // All user entries with permitted = false => are counted as registration requests
+        const allUsers = await userRepository.find({
+            where: [ { isPermitted: true } ],
+            select: [ 'id', 'firstName', 'lastName', 'email' ],
+            relations: [ 'role' ]
+        });
         res.send(allUsers.map(user => Object.assign({}, {
             id: user.id,
             firstName: user.firstName,
