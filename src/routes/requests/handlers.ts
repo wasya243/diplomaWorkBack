@@ -2,7 +2,7 @@ import express from 'express';
 import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Classroom, Request, Dispatcher } from '../../db/models';
+import { Classroom, Request, Faculty, Dispatcher } from '../../db/models';
 
 export const createRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const requestInfo = req.body;
@@ -13,10 +13,10 @@ export const createRequest = async (req: express.Request, res: express.Response,
         const connection = DatabaseManager.getConnection();
         const requestRepository = connection.getRepository(Request);
         const classroomRepository = connection.getRepository(Classroom);
-        const dispatcherRepository = connection.getRepository(Dispatcher);
+        const facultyRepository = connection.getRepository(Faculty);
 
         const classroom = await classroomRepository.findOne(requestInfo.classroomId);
-        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'requests' ] });
+        const faculty = await facultyRepository.findOne(dispatcherId);
 
         if (!classroom) {
             return next(createHttpError(404, `Classroom with provided id ${requestInfo.classroomId} does not exist`));
@@ -26,8 +26,7 @@ export const createRequest = async (req: express.Request, res: express.Response,
 
         request.classroom = classroom;
         // @ts-ignore
-        // there always will be a dispatcher be given id otherwise auth stage will fail
-        request.dispatcher = dispatcher;
+        request.faculty = faculty;
         request.end = requestInfo.end;
         request.start = requestInfo.start;
 
@@ -58,6 +57,28 @@ export const reviewRequest = async (req: express.Request, res: express.Response,
         await requestRepository.save(requestToReview);
 
         res.send(requestToReview);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+export const getRequests = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // @ts-ignore
+    const userId = req.userData.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const dispatcherRepository = connection.getRepository(Dispatcher);
+        const requestRepository = connection.getRepository(Request);
+
+        const dispatcher = await dispatcherRepository.findOne(userId, { relations: [ 'faculty' ] });
+        const requests = dispatcher && await requestRepository.find({
+            where: [ { faculty: dispatcher.faculty.id } ],
+            relations: [ 'faculty', 'classroom' ]
+        }) || [];
+
+        res.send(requests.map(request => Object.assign(request, { faculty: request.faculty.name, classroom: request.classroom.number })));
     } catch (error) {
         next(error);
     }

@@ -1,9 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Unique } from 'typeorm';
 import moment from 'moment';
 
-import { Classroom, Dispatcher } from '../models';
+import { Classroom, Faculty } from '../models';
 
-@Unique([ 'dispatcher', 'createdAt', 'classroom' ])
+@Unique([ 'faculty', 'createdAt', 'classroom' ])
 
 @Entity()
 export class Request {
@@ -27,9 +27,9 @@ export class Request {
         //@ts-ignore
     createdAt: Date;
 
-    @ManyToOne(type => Dispatcher, dispatcher => dispatcher.requests, { cascade: true, onDelete: 'CASCADE' })
+    @ManyToOne(type => Faculty, faculty => faculty.requests, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore
-    dispatcher: Dispatcher;
+    faculty: Faculty;
 
     @ManyToOne(type => Classroom, classroom => classroom.requests, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore

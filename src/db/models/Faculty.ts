@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, Index, OneToMany } from 'typeor
 
 import { Group } from './Group';
 import { Classroom } from './Сlassroom';
+import { Request } from './Request';
 
 @Entity()
 export class Faculty {
@@ -39,4 +40,8 @@ export class Faculty {
     @OneToMany(type => Group, group => group.faculty)
         //@ts-ignore
     groups: Group[];
+
+    @OneToMany(type => Request, request => request.faculty)
+        //@ts-ignore
+    requests: Request[];
 }

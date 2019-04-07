@@ -1,14 +1,15 @@
 import express from 'express';
 
 import { authMiddleware } from '../../auth';
-import { createRequest, reviewRequest } from './handlers';
+import { createRequest, reviewRequest, getRequests } from './handlers';
 import { validate as createValidationMiddleWare } from '../../lib/middlewares';
 import { createRequestSchema, reviewRequestSchema } from '../../lib/validation';
+import { checkPermission } from '../../auth/middlewares/permission';
 
 export const routes = express.Router();
 
-// TODO: add permission middleware
-routes.post('/requests', authMiddleware, createValidationMiddleWare(createRequestSchema), createRequest);
+routes.post('/requests', authMiddleware, checkPermission.create('createRequest'), createValidationMiddleWare(createRequestSchema), createRequest);
 
-// TODO: add permission middleware
-routes.put('/review-requests/:id', authMiddleware, createValidationMiddleWare(reviewRequestSchema), reviewRequest);
+routes.put('/review-requests/:id', authMiddleware, checkPermission.update('updateRequest'), createValidationMiddleWare(reviewRequestSchema), reviewRequest);
+
+routes.get('/requests', authMiddleware, checkPermission.read('getAllRequests'), getRequests);
