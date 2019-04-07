@@ -11,12 +11,15 @@ export const createRequest = async (req: express.Request, res: express.Response,
 
     try {
         const connection = DatabaseManager.getConnection();
+
+        const dispatcherRepository = connection.getRepository(Dispatcher);
         const requestRepository = connection.getRepository(Request);
         const classroomRepository = connection.getRepository(Classroom);
         const facultyRepository = connection.getRepository(Faculty);
 
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
         const classroom = await classroomRepository.findOne(requestInfo.classroomId);
-        const faculty = await facultyRepository.findOne(dispatcherId);
+        const faculty = dispatcher && await facultyRepository.findOne(dispatcher.faculty.id);
 
         if (!classroom) {
             return next(createHttpError(404, `Classroom with provided id ${requestInfo.classroomId} does not exist`));
