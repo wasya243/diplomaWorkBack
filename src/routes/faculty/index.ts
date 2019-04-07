@@ -8,7 +8,7 @@ import { updateFacultySchema } from '../../lib/validation';
 
 export const routes = express.Router();
 
-routes.get('/faculties', authMiddleware, checkPermission.read('getAllFaculties'), getFaculties);
+routes.get('/faculties', getFaculties);
 
 routes.post('/faculties', authMiddleware, checkPermission.create('createFaculty'), createFaculty);
 

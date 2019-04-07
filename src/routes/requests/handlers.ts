@@ -2,7 +2,7 @@ import express from 'express';
 import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Classroom, Request, User } from '../../db/models';
+import { Classroom, Request, Dispatcher } from '../../db/models';
 
 export const createRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const requestInfo = req.body;
@@ -13,10 +13,10 @@ export const createRequest = async (req: express.Request, res: express.Response,
         const connection = DatabaseManager.getConnection();
         const requestRepository = connection.getRepository(Request);
         const classroomRepository = connection.getRepository(Classroom);
-        const userRepository = connection.getRepository(User);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
 
         const classroom = await classroomRepository.findOne(requestInfo.classroomId);
-        const dispatcher = await userRepository.findOne(dispatcherId, { relations: [ 'requests' ] });
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'requests' ] });
 
         if (!classroom) {
             return next(createHttpError(404, `Classroom with provided id ${requestInfo.classroomId} does not exist`));

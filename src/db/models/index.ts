@@ -1,5 +1,6 @@
 export * from './Action';
 export * from './User';
+export * from './Dispatcher';
 export * from './Permission';
 export * from './Role';
 export * from './Resource';

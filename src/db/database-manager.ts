@@ -2,6 +2,7 @@ import { createConnection, Connection } from 'typeorm';
 
 import {
     User,
+    Dispatcher,
     Action,
     Resource,
     Role,
@@ -46,6 +47,7 @@ export class DatabaseManager {
                 database: DATABASE,
                 entities: [
                     User,
+                    Dispatcher,
                     Action,
                     Resource,
                     Role,

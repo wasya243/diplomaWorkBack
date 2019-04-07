@@ -3,7 +3,7 @@ import * as express from 'express';
 
 import { DatabaseManager } from '../../db/database-manager';
 import { verifyPassword, encryptPassword, sign } from '../../auth';
-import { User } from '../../db/models';
+import { User, Role, Faculty, Dispatcher } from '../../db/models';
 import { simpleUniqueId } from '../../lib/helpers';
 
 export async function signIn(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -12,9 +12,13 @@ export async function signIn(req: express.Request, res: express.Response, next: 
         const connection = DatabaseManager.getConnection();
 
         const userRepository = connection.getRepository(User);
+
         const user = await userRepository.findOne({ email }, { relations: [ 'role' ] });
         if (!user || !await verifyPassword(password, user.password)) {
             return next({ status: 401 });
+        }
+        if (user && user.role.name === 'dispatcher' && !(user as Dispatcher).isPermitted) {
+            return next(createHttpError(403, `Dispatcher with id ${user.id} has not been yet permitted to access resource`));
         }
 
         const userPayload = { id: user.id, sessionId: simpleUniqueId() };
@@ -61,19 +65,43 @@ export async function signOut(req: express.Request, res: express.Response, next:
 
 
 export async function signUp(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const { firstName, lastName, password, roleId, facultyId, email } = req.body;
     try {
-        const userInfo = req.body;
         const connection = DatabaseManager.getConnection();
 
         const userRepository = connection.getRepository(User);
-        const user = await userRepository.findOne({ email: userInfo.email });
+        const roleRepository = connection.getRepository(Role);
+        const facultiesRepository = connection.getRepository(Faculty);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
+
+        const user = await userRepository.findOne({ email: email });
+        const faculty = await facultiesRepository.findOne(facultyId);
+        const role = await roleRepository.findOne(roleId);
+
         if (user) {
             return next(createHttpError(400, `User with ${user.email} already exists`));
         }
 
-        userInfo.password = await encryptPassword(userInfo.password);
-        const createdUser = await userRepository.save(userInfo);
-        res.send(createdUser);
+        if (!role) {
+            return next(createHttpError(404, `Role with provided id ${roleId} does not exist`));
+        }
+
+        if (!faculty) {
+            return next(createHttpError(404, `Faculty with provided id ${facultyId} does not exist`));
+        }
+
+        const dispatcher = new Dispatcher();
+
+        dispatcher.password = await encryptPassword(password);
+        dispatcher.email = email;
+        dispatcher.firstName = firstName;
+        dispatcher.lastName = lastName;
+        dispatcher.role = role;
+        dispatcher.faculty = faculty;
+
+        await dispatcherRepository.save(dispatcher);
+
+        res.send(dispatcher);
     } catch (error) {
         next(error);
     }

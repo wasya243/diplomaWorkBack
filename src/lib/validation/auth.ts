@@ -4,9 +4,10 @@ export const signUpSchema = {
     body: {
         email: Joi.string().required(),
         password: Joi.string().required(),
-        role: Joi.number().required(),
+        roleId: Joi.number().required(),
         firstName: Joi.string().required(),
-        lastName: Joi.string().required()
+        lastName: Joi.string().required(),
+        facultyId: Joi.number().required()
     }
 };
 

@@ -1,9 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, TableInheritance } from 'typeorm';
 
 import { Role } from './Role';
-import { Request } from './Request';
 
 @Entity()
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export class User {
 
     @PrimaryGeneratedColumn()
@@ -41,8 +41,4 @@ export class User {
     @ManyToOne(type => Role, role => role.users)
         //@ts-ignore
     role: Role;
-
-    @OneToMany(type => Request, request => request.dispatcher)
-        //@ts-ignore
-    requests: Request[];
 }
