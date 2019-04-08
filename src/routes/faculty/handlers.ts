@@ -1,7 +1,39 @@
 import express from 'express';
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Faculty } from '../../db/models';
+import { Faculty, Classroom } from '../../db/models';
+
+export const getClassroomsByFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const facultyId = req.params.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+        const facultyRepository = connection.getRepository(Faculty);
+        const classroomRepository = connection.getRepository(Classroom);
+
+        const faculty = await facultyRepository.findOne(facultyId);
+        if (!faculty) {
+            return next();
+        }
+
+        const classrooms = await classroomRepository
+            .createQueryBuilder('classroom')
+            .where('classroom."facultyId" = :facultyId')
+            .setParameters({ facultyId: faculty.id })
+            .getMany();
+
+        res.send(classrooms.map(classroom => Object.assign({}, {
+            id: classroom.id,
+            number: classroom.number,
+            amountOfSeats: classroom.amountOfSeats,
+            faculty: {
+                name: faculty.name,
+                id: faculty.id
+            }
+        })));
+    } catch (error) {
+        next(error);
+    }
+};
 
 export const getFaculties = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
