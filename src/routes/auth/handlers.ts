@@ -12,13 +12,24 @@ export async function signIn(req: express.Request, res: express.Response, next: 
         const connection = DatabaseManager.getConnection();
 
         const userRepository = connection.getRepository(User);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
 
+        let facultyId = null;
         const user = await userRepository.findOne({ email }, { relations: [ 'role' ] });
         if (!user || !await verifyPassword(password, user.password)) {
             return next({ status: 401 });
         }
         if (user && user.role.name === 'dispatcher' && !(user as Dispatcher).isPermitted) {
             return next(createHttpError(403, `Dispatcher with id ${user.id} has not been yet permitted to access resource`));
+        }
+        if (user.role.name === 'dispatcher') {
+            const dispatcherInfo = await dispatcherRepository
+                .createQueryBuilder('dispatcher')
+                .where('dispatcher.email = :email')
+                .setParameters({ email: email })
+                .innerJoinAndSelect('dispatcher.faculty', 'faculty')
+                .getOne();
+            facultyId = dispatcherInfo && dispatcherInfo.faculty.id;
         }
 
         const userPayload = { id: user.id, sessionId: simpleUniqueId() };
@@ -33,7 +44,8 @@ export async function signIn(req: express.Request, res: express.Response, next: 
                 firstName: user.firstName,
                 lastName: user.lastName,
                 id: user.id,
-                role: user.role.name
+                role: user.role.name,
+                facultyId: facultyId ? facultyId : null
             }
         });
     } catch (error) {
