@@ -18,11 +18,15 @@ export const createRequest = async (req: express.Request, res: express.Response,
         const facultyRepository = connection.getRepository(Faculty);
 
         const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
-        const classroom = await classroomRepository.findOne(requestInfo.classroomId);
+        const classroom = await classroomRepository.findOne(requestInfo.classroomId, { relations: [ 'faculty' ] });
         const faculty = dispatcher && await facultyRepository.findOne(dispatcher.faculty.id);
 
         if (!classroom) {
             return next(createHttpError(404, `Classroom with provided id ${requestInfo.classroomId} does not exist`));
+        }
+
+        if ((dispatcher && classroom) && dispatcher.faculty.id === classroom.faculty.id) {
+            return next(createHttpError(404, `Cannot create request for your own classroom. Dispatcher with id ${dispatcher.id}, classroom with id ${classroom.id}`));
         }
 
         const request = new Request();
@@ -65,7 +69,6 @@ export const reviewRequest = async (req: express.Request, res: express.Response,
     }
 };
 
-
 export const getRequests = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // @ts-ignore
     const userId = req.userData.id;
@@ -76,13 +79,22 @@ export const getRequests = async (req: express.Request, res: express.Response, n
         const requestRepository = connection.getRepository(Request);
 
         const dispatcher = await dispatcherRepository.findOne(userId, { relations: [ 'faculty' ] });
-        const requests = dispatcher && await requestRepository.find({
-            where: [ { faculty: dispatcher.faculty.id } ],
-            relations: [ 'faculty', 'classroom' ]
-        }) || [];
 
-        res.send(requests.map(request => Object.assign(request, { faculty: request.faculty.name, classroom: request.classroom.number })));
+        const requests = dispatcher && await requestRepository
+            .createQueryBuilder('request')
+            .innerJoinAndSelect('request.faculty', 'originFaculty')
+            .innerJoinAndSelect('request.classroom', 'classroom')
+            .innerJoinAndSelect('classroom.faculty', 'sourceFaculty')
+            .where('sourceFaculty.id = :facultyId')
+            .setParameters({ facultyId: dispatcher.faculty.id })
+            .getMany() || [];
+
+        res.send(requests.map(request => Object.assign(request, {
+            faculty: request.faculty.name,
+            classroom: request.classroom.number
+        })));
     } catch (error) {
         next(error);
     }
 };
+
