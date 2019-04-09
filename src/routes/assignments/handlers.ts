@@ -3,11 +3,13 @@ import moment from 'moment';
 import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Assignment, Classroom, DoubleLesson, Group, Request } from '../../db/models';
+import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher } from '../../db/models';
 import { isPassedToOtherFaculty } from '../../lib/helpers';
 
 export const createAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { doubleLessonId, groupId, classroomId, assignmentDate } = req.body;
+    // @ts-ignore
+    const dispatcherId = req.userData.id;
     try {
         const connection = DatabaseManager.getConnection();
 
@@ -16,10 +18,12 @@ export const createAssignment = async (req: express.Request, res: express.Respon
         const groupRepository = connection.getRepository(Group);
         const requestRepository = connection.getRepository(Request);
         const assignmentRepository = connection.getRepository(Assignment);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
 
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
         const doubleLesson = await doubleLessonRepository.findOne(doubleLessonId);
         const group = await groupRepository.findOne(groupId);
-        const classroom = await classroomRepository.findOne(classroomId);
+        const classroom = await classroomRepository.findOne(classroomId, { relations: [ 'faculty' ] });
 
         if (!doubleLesson) {
             return next(createHttpError(404, `Double lesson with provided id ${doubleLessonId} does not exist`));
@@ -59,9 +63,17 @@ export const createAssignment = async (req: express.Request, res: express.Respon
 
 
         const isPassed = isPassedToOtherFaculty(assignmentDateStart, assignmentDateEnd, requests);
-        if (isPassed) {
+
+        // if classroom belongs to the dispatcher sending the request
+        if ((dispatcher && dispatcher.faculty.id === classroom.faculty.id) && isPassed) {
             return next(createHttpError(400, `This ${classroomId} classroom cannot be used during this period start ${assignmentDateStart} end ${assignmentDateEnd} cause it was passed to other faculty`));
         }
+
+        // if classroom does not belong to the dispatcher sending the request
+        if ((dispatcher && dispatcher.faculty.id !== classroom.faculty.id) && !isPassed) {
+            return next(createHttpError(400, `This ${classroomId} classroom cannot be used during this period start ${assignmentDateStart} end ${assignmentDateEnd} cause it was not passed dispatcher with id ${dispatcher.id}`));
+        }
+
 
         // check if there is enough space left in classroom
         const assignments = await assignmentRepository
