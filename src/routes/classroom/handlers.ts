@@ -2,7 +2,7 @@ import express from 'express';
 import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Classroom, Faculty } from '../../db/models';
+import { Assignment, Classroom, DoubleLesson, Faculty } from '../../db/models';
 
 export const getClassrooms = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
@@ -102,6 +102,58 @@ export const deleteClassroom = async (req: express.Request, res: express.Respons
         }
         await classroomRepository.remove(classroomToRemove);
         res.status(204).end();
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getFreeClassrooms = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const { assignmentDate, facultyId, doubleLessonId } = req.query;
+    // @ts-ignore
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const classroomRepository = connection.getRepository(Classroom);
+        const assignmentsRepository = connection.getRepository(Assignment);
+        const facultyRepository = connection.getRepository(Faculty);
+        const doubleLessonRepository = connection.getRepository(DoubleLesson);
+
+        const faculty = await facultyRepository.findOne(facultyId);
+        const doubleLesson = await doubleLessonRepository.findOne(doubleLessonId);
+
+        if (!faculty) {
+            return next(createHttpError(404, `Faculty with provided id ${facultyId} is not found`));
+        }
+
+        if (!doubleLesson) {
+            return next(createHttpError(404, `Double lesson with provided id ${doubleLessonId} is not found`));
+        }
+
+        const assignments = await assignmentsRepository
+            .createQueryBuilder('assignment')
+            .innerJoinAndSelect('assignment.classroom', 'classroom')
+            .innerJoinAndSelect('classroom.faculty', 'faculty')
+            .where('faculty.id = :facultyId')
+            .andWhere('assignment."assignmentDate" = :assignmentDate')
+            .andWhere('assignment."doubleLessonId" = :doubleLessonId')
+            .setParameters({ facultyId, assignmentDate, doubleLessonId })
+            .getMany();
+
+        const usedClassroomsIds = assignments.map(assignment => assignment.classroom.id);
+
+        const freeClassrooms = await classroomRepository
+            .createQueryBuilder('classroom')
+            .innerJoinAndSelect('classroom.faculty', 'faculty')
+            .where('classroom.id NOT IN (:...usedClassroomsIds)', { usedClassroomsIds })
+            .andWhere('faculty.id = :facultyId', { facultyId })
+            .getMany();
+
+        res.send(freeClassrooms.map(classroom => Object.assign(classroom, {
+            faculty: {
+                id: classroom.faculty.id,
+                name: classroom.faculty.name
+            }
+        })));
     } catch (error) {
         next(error);
     }
