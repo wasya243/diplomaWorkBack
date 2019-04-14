@@ -57,8 +57,21 @@ export interface IClassroomUsageDBReport {
 export interface IClassroomUsageProcessedReport {
     [ key: string ]: {
         [ key: string ]: {
-            usages: Array<{ doubleLessonNumber: number; count: number; }>;
+            usages: {
+                [ key: string ]: number;
+            };
             totalUse: number;
         }
     }
+}
+
+export interface IReport {
+    assignmentDate: string;
+    classrooms: [ {
+        usage: {
+            doubleLessonNumber: number,
+            count: number
+        },
+        totalUse: number;
+    } ];
 }

@@ -1,13 +1,14 @@
 import moment from 'moment';
 
-import { Classroom, Request } from '../db/models';
+import { Classroom, DoubleLesson, Request } from '../db/models';
 import {
     RawPermission,
     ProcessedPermission,
     ProcessedJoiValidationError,
     RawJoiValidationError,
     IClassroomUsageDBReport,
-    IClassroomUsageProcessedReport
+    IClassroomUsageProcessedReport,
+    IReport
 } from '../types';
 
 // this function is used to generate sessionId
@@ -58,20 +59,17 @@ export function isPassedToOtherFaculty(assignmentDateStart: any, assignmentDateE
     return result;
 }
 
-export function fillReport(initReport: IClassroomUsageProcessedReport, assignments: Array<IClassroomUsageDBReport>) {
+export function fillReport(initReport: any, assignments: Array<IClassroomUsageDBReport>) {
     const mappedAssignments = assignments
         .map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
 
     for (let assignment of mappedAssignments) {
-        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'classroomNumber' ] ].usages.push({
-            doubleLessonNumber: assignment[ 'doubleLessonNumber' ],
-            count: parseInt(assignment[ 'count' ])
-        });
+        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'classroomNumber' ] ][ 'usages' ][ assignment.doubleLessonNumber ] = parseInt(assignment[ 'count' ]);
         initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'classroomNumber' ] ].totalUse += parseInt(assignment[ 'count' ]);
     }
 }
 
-export function initReport(classrooms: Array<Classroom>, dateStart: string, dateEnd: string): IClassroomUsageProcessedReport {
+export function initReport(doubleLessons: Array<DoubleLesson>, classrooms: Array<Classroom>, dateStart: string, dateEnd: string): IClassroomUsageProcessedReport {
     let report: any = {};
     let dates = [ moment(dateStart).format() ];
     dates = dates.concat(enumerateDaysBetweenDates(dateStart, dateEnd).map(date => moment(date).format()));
@@ -81,7 +79,10 @@ export function initReport(classrooms: Array<Classroom>, dateStart: string, date
         report[ date ] = {};
         for (const classroom of classrooms) {
             report[ date ][ classroom.number ] = {
-                usages: [],
+                usages: Object.assign({}, doubleLessons.reduce((ac: any, cv: DoubleLesson) => {
+                    ac[ cv.number ] = 0;
+                    return ac;
+                }, {})),
                 totalUse: 0
             };
         }
@@ -100,5 +101,34 @@ export function enumerateDaysBetweenDates(start: string, end: string): Array<Dat
     }
 
     return dates;
+}
+
+export function prepareReportForRendering(report: IClassroomUsageProcessedReport): Array<IReport> {
+    let result: any[] = [];
+
+    const dates = Object.keys(report);
+    for (const date of dates) {
+        const currentValue: any = {};
+        currentValue.assignmentDate = date;
+        currentValue.classrooms = [];
+        const classrooms = Object.keys(report[ date ]);
+        for (const classroom of classrooms) {
+            const currentClassroom: any = {};
+            currentClassroom.classroomNuber = parseInt(classroom);
+            currentClassroom.usages = [];
+            const usages = Object.keys(report[ date ][ classroom ].usages);
+            for (const usage of usages) {
+                currentClassroom.usages.push({
+                    doubleLessonNumber: parseInt(usage),
+                    count: report[ date ][ classroom ].usages[ usage ]
+                });
+            }
+            currentClassroom.totalUse = report[ date ][ classroom ].totalUse;
+            currentValue.classrooms.push(currentClassroom);
+        }
+        result.push(currentValue);
+    }
+
+    return result;
 }
 
