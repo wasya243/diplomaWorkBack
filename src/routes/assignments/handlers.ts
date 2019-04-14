@@ -4,7 +4,7 @@ import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
 import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher } from '../../db/models';
-import { isPassedToOtherFaculty } from '../../lib/helpers';
+import { isPassedToOtherFaculty, initReport, updateReport } from '../../lib/helpers';
 
 export const createAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { doubleLessonId, groupId, classroomId, assignmentDate } = req.body;
@@ -102,3 +102,40 @@ export const createAssignment = async (req: express.Request, res: express.Respon
         next(error);
     }
 };
+
+
+export const getReport = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // @ts-ignore
+    const dispatcherId = req.userData.id;
+    const { start, end } = req.query;
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const assignmentRepository = connection.getRepository(Assignment);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
+        const classroomRepository = connection.getRepository(Classroom);
+
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
+        const classrooms = await classroomRepository.find({ faculty: dispatcher && dispatcher.faculty });
+
+        const assignments = (await assignmentRepository
+            .query(`
+                SELECT "assignmentDate", "number", COUNT(*)
+                FROM classroom
+                INNER JOIN assignment on classroom.id = assignment."classroomId"
+                WHERE classroom."facultyId" = ${dispatcher && dispatcher.faculty.id}
+                AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
+                GROUP BY "assignmentDate", "number"
+            `)).map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
+
+        const report = initReport(classrooms, start, end);
+        updateReport(report, assignments);
+
+        res.send(report);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+

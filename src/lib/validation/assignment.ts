@@ -8,3 +8,11 @@ export const createAssignmentSchema = {
         assignmentDate: Joi.string().isoDate().required()
     }
 };
+
+
+export const getReportSchema = {
+    query: {
+        start: Joi.string().regex(new RegExp('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
+        end: Joi.string().regex(new RegExp('[0-9]{4}-[0-9]{2}-[0-9]{2}'))
+    }
+};

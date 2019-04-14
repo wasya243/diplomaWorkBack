@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-import { Request } from '../db/models';
+import { Classroom, Request } from '../db/models';
 import { RawPermission, ProcessedPermission, ProcessedJoiValidationError, RawJoiValidationError } from '../types';
 
 // this function is used to generate sessionId
@@ -50,3 +50,41 @@ export function isPassedToOtherFaculty(assignmentDateStart: any, assignmentDateE
 
     return result;
 }
+
+export function updateReport(initReport: any, assignments: Array<any>) {
+    const mappedAssignments = assignments
+        .map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
+
+    for (let assignment of mappedAssignments) {
+        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'number' ] ] = parseInt(assignment[ 'count' ]);
+    }
+}
+
+export function initReport(classrooms: Array<Classroom>, dateStart: string, dateEnd: string) {
+    let report: any = {};
+    let dates = [ moment(dateStart).format() ];
+    dates = dates.concat(enumerateDaysBetweenDates(dateStart, dateEnd).map(date => moment(date).format()));
+    dates.push(moment(dateEnd).format());
+
+    for (const date of dates) {
+        report[ date ] = {};
+        for (const classroom of classrooms) {
+            report[ date ][ classroom.number ] = 0;
+        }
+    }
+
+    return report;
+}
+
+export function enumerateDaysBetweenDates(start: string, end: string): Array<Date> {
+    const dates = [];
+    const currentDate = moment(start).startOf('day');
+    const lastDate = moment(end).startOf('day');
+
+    while (currentDate.add(1, 'day').diff(lastDate) < 0) {
+        dates.push(currentDate.clone().toDate());
+    }
+
+    return dates;
+}
+
