@@ -45,3 +45,20 @@ export interface ProcessedJoiValidationError {
     key: string;
     message: string;
 }
+
+
+export interface IClassroomUsageDBReport {
+    assignmentDate: string;
+    doubleLessonNumber: number;
+    classroomNumber: number;
+    count: string;
+}
+
+export interface IClassroomUsageProcessedReport {
+    [ key: string ]: {
+        [ key: string ]: {
+            usages: Array<{ doubleLessonNumber: number; count: number; }>;
+            totalUse: number;
+        }
+    }
+}

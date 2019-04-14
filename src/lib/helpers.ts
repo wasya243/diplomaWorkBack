@@ -1,7 +1,14 @@
 import moment from 'moment';
 
 import { Classroom, Request } from '../db/models';
-import { RawPermission, ProcessedPermission, ProcessedJoiValidationError, RawJoiValidationError } from '../types';
+import {
+    RawPermission,
+    ProcessedPermission,
+    ProcessedJoiValidationError,
+    RawJoiValidationError,
+    IClassroomUsageDBReport,
+    IClassroomUsageProcessedReport
+} from '../types';
 
 // this function is used to generate sessionId
 export function simpleUniqueId() {
@@ -51,16 +58,20 @@ export function isPassedToOtherFaculty(assignmentDateStart: any, assignmentDateE
     return result;
 }
 
-export function updateReport(initReport: any, assignments: Array<any>) {
+export function fillReport(initReport: IClassroomUsageProcessedReport, assignments: Array<IClassroomUsageDBReport>) {
     const mappedAssignments = assignments
         .map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
 
     for (let assignment of mappedAssignments) {
-        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'number' ] ] = parseInt(assignment[ 'count' ]);
+        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'classroomNumber' ] ].usages.push({
+            doubleLessonNumber: assignment[ 'doubleLessonNumber' ],
+            count: parseInt(assignment[ 'count' ])
+        });
+        initReport[ assignment[ 'assignmentDate' ] ][ assignment[ 'classroomNumber' ] ].totalUse += parseInt(assignment[ 'count' ]);
     }
 }
 
-export function initReport(classrooms: Array<Classroom>, dateStart: string, dateEnd: string) {
+export function initReport(classrooms: Array<Classroom>, dateStart: string, dateEnd: string): IClassroomUsageProcessedReport {
     let report: any = {};
     let dates = [ moment(dateStart).format() ];
     dates = dates.concat(enumerateDaysBetweenDates(dateStart, dateEnd).map(date => moment(date).format()));
@@ -69,7 +80,10 @@ export function initReport(classrooms: Array<Classroom>, dateStart: string, date
     for (const date of dates) {
         report[ date ] = {};
         for (const classroom of classrooms) {
-            report[ date ][ classroom.number ] = 0;
+            report[ date ][ classroom.number ] = {
+                usages: [],
+                totalUse: 0
+            };
         }
     }
 

@@ -2,9 +2,10 @@ import express from 'express';
 import moment from 'moment';
 import createHttpError = require('http-errors');
 
+import { IClassroomUsageDBReport } from '../../types';
 import { DatabaseManager } from '../../db/database-manager';
 import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher } from '../../db/models';
-import { isPassedToOtherFaculty, initReport, updateReport } from '../../lib/helpers';
+import { isPassedToOtherFaculty, initReport, fillReport } from '../../lib/helpers';
 
 export const createAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { doubleLessonId, groupId, classroomId, assignmentDate } = req.body;
@@ -80,7 +81,12 @@ export const createAssignment = async (req: express.Request, res: express.Respon
             .createQueryBuilder('assignment')
             .where('assignment."classroomId" = :classroomId')
             .andWhere('assignment.assignmentDate = :assignmentDate')
-            .setParameters({ classroomId: classroomId, assignmentDate: moment(assignmentDate).startOf('day').format() })
+            .andWhere('assignment."doubleLessonId" = :doubleLessonId')
+            .setParameters({
+                doubleLessonId: doubleLessonId,
+                classroomId: classroomId,
+                assignmentDate: moment(assignmentDate).startOf('day').format()
+            })
             .innerJoinAndSelect('assignment.group', 'group')
             .getMany();
         const amountOfPeople = assignments.reduce((ac, cu) => ac + cu.group.amountOfPeople, 0);
@@ -118,18 +124,19 @@ export const getReport = async (req: express.Request, res: express.Response, nex
         const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
         const classrooms = await classroomRepository.find({ faculty: dispatcher && dispatcher.faculty });
 
-        const assignments = (await assignmentRepository
+        const assignments: Array<IClassroomUsageDBReport> = (await assignmentRepository
             .query(`
-                SELECT "assignmentDate", "number", COUNT(*)
+                SELECT "assignmentDate", classroom.number AS "classroomNumber", double_lesson.number AS "doubleLessonNumber", COUNT(*)
                 FROM classroom
                 INNER JOIN assignment on classroom.id = assignment."classroomId"
+                INNER JOIN double_lesson on assignment."doubleLessonId" = double_lesson.id
                 WHERE classroom."facultyId" = ${dispatcher && dispatcher.faculty.id}
                 AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
-                GROUP BY "assignmentDate", "number"
-            `)).map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
+                GROUP BY "assignmentDate", "doubleLessonNumber", "classroomNumber"
+            `));
 
         const report = initReport(classrooms, start, end);
-        updateReport(report, assignments);
+        fillReport(report, assignments);
 
         res.send(report);
     } catch (error) {
