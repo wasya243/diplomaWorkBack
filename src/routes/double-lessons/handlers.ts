@@ -7,7 +7,10 @@ export async function getDoubleLessons(req: express.Request, res: express.Respon
     try {
         const connection = DatabaseManager.getConnection();
         const doubleLessonRepository = connection.getRepository(DoubleLesson);
-        const allDoubleLessons = await doubleLessonRepository.find({});
+        const allDoubleLessons = await doubleLessonRepository
+            .createQueryBuilder('doubleLesson')
+            .orderBy('doubleLesson.number', 'ASC')
+            .getMany();
         res.send(allDoubleLessons);
     } catch (error) {
         next(error);

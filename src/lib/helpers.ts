@@ -114,7 +114,7 @@ export function prepareReportForRendering(report: IClassroomUsageProcessedReport
         const classrooms = Object.keys(report[ date ]);
         for (const classroom of classrooms) {
             const currentClassroom: any = {};
-            currentClassroom.classroomNuber = parseInt(classroom);
+            currentClassroom.classroomNumber = parseInt(classroom);
             currentClassroom.usages = [];
             const usages = Object.keys(report[ date ][ classroom ].usages);
             for (const usage of usages) {
