@@ -75,3 +75,15 @@ export interface IReport {
         totalUse: number;
     } ];
 }
+
+export interface IAssignment {
+    id: number;
+    groupId: number;
+    classroomId: number;
+    assignmentDate: string;
+    doubleLessonId: number;
+    createdAt: string;
+    number: number;
+    amountOfSeats: number;
+    facultyId: number;
+}

@@ -5,7 +5,13 @@ import createHttpError = require('http-errors');
 import { IClassroomUsageDBReport } from '../../types';
 import { DatabaseManager } from '../../db/database-manager';
 import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher } from '../../db/models';
-import { isPassedToOtherFaculty, initReport, fillReport, prepareReportForRendering } from '../../lib/helpers';
+import {
+    isPassedToOtherFaculty,
+    initReport,
+    fillReport,
+    prepareReportForRendering,
+    groupAssignments
+} from '../../lib/helpers';
 
 export const createAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const { doubleLessonId, groupId, classroomId, assignmentDate } = req.body;
@@ -149,4 +155,30 @@ export const getReport = async (req: express.Request, res: express.Response, nex
 };
 
 
+export const getAssignments = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // @ts-ignore
+    const dispatcherId = req.userData.id;
+    const { start, end } = req.query;
+    try {
+        const connection = DatabaseManager.getConnection();
 
+        const dispatcherRepository = connection.getRepository(Dispatcher);
+        const assignmentRepository = connection.getRepository(Assignment);
+
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
+        const assignments = await assignmentRepository
+            .query(`
+                SELECT *
+                FROM assignment
+                INNER JOIN classroom ON assignment."classroomId" = classroom.id
+                WHERE classroom."facultyId" = ${dispatcher && dispatcher.faculty.id}
+                AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
+            `);
+
+        const processedAssignments = groupAssignments(assignments);
+
+        res.send(processedAssignments);
+    } catch (error) {
+        next(error);
+    }
+};

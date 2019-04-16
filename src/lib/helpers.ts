@@ -1,4 +1,5 @@
 import moment from 'moment';
+import _ from 'lodash';
 
 import { Classroom, DoubleLesson, Request } from '../db/models';
 import {
@@ -8,7 +9,8 @@ import {
     RawJoiValidationError,
     IClassroomUsageDBReport,
     IClassroomUsageProcessedReport,
-    IReport
+    IReport,
+    IAssignment
 } from '../types';
 
 // this function is used to generate sessionId
@@ -132,3 +134,33 @@ export function prepareReportForRendering(report: IClassroomUsageProcessedReport
     return result;
 }
 
+export function groupAssignments(assignments: IAssignment[]) {
+    const groupedByAssignmentDate = _.groupBy(assignments, 'assignmentDate');
+    const dates = Object.keys(groupedByAssignmentDate);
+    const result = [];
+
+    for (const date of dates) {
+        const assignments = groupedByAssignmentDate[ date ].map(assignment => {
+            delete assignment.assignmentDate;
+            return Object.assign({}, {
+                id: assignment.id,
+                groupId: assignment.groupId,
+                doubleLessonId: assignment.doubleLessonId,
+                classroom: {
+                    id: assignment.classroomId,
+                    number: assignment.number,
+                    amountOfSeats: assignment.amountOfSeats,
+                    facultyId: assignment.facultyId
+                },
+                createdAt: moment(assignment.createdAt).format(),
+
+            });
+        });
+        result.push({
+            assignmentDate: moment(date).format(),
+            assignments
+        });
+    }
+
+    return result;
+}
