@@ -61,6 +61,8 @@ export function isPassedToOtherFaculty(assignmentDateStart: any, assignmentDateE
     return result;
 }
 
+// TODO: I should remove all this stuff and find a way how to achieve the same result using sql queries
+
 export function fillReport(initReport: any, assignments: Array<IClassroomUsageDBReport>) {
     const mappedAssignments = assignments
         .map((assignment: any) => Object.assign(assignment, { 'assignmentDate': moment(assignment[ 'assignmentDate' ]).format() }));
@@ -134,9 +136,9 @@ export function prepareReportForRendering(report: IClassroomUsageProcessedReport
     return result;
 }
 
-export function groupAssignments(assignments: IAssignment[]) {
+export function groupAssignments(assignments: IAssignment[], allDates: string[]) {
     const groupedByAssignmentDate = _.groupBy(assignments, 'assignmentDate');
-    const dates = Object.keys(groupedByAssignmentDate);
+    let dates = Object.keys(groupedByAssignmentDate);
     const result = [];
 
     for (const date of dates) {
@@ -162,5 +164,22 @@ export function groupAssignments(assignments: IAssignment[]) {
         });
     }
 
-    return result;
+    dates = dates.map(date => moment(date).format());
+
+    for (const date of allDates) {
+        if (dates.indexOf(date) === -1) {
+            result.push({
+                assignmentDate: date,
+                assignments: []
+            });
+        }
+    }
+
+    return result.sort((a, b) => {
+        const dateA = moment(a.assignmentDate);
+        const dateB = moment(b.assignmentDate);
+
+        // @ts-ignore
+        return (dateA - dateB);
+    });
 }

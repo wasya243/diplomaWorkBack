@@ -10,7 +10,7 @@ import {
     initReport,
     fillReport,
     prepareReportForRendering,
-    groupAssignments
+    groupAssignments, enumerateDaysBetweenDates
 } from '../../lib/helpers';
 
 export const createAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -175,7 +175,11 @@ export const getAssignments = async (req: express.Request, res: express.Response
                 AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
             `);
 
-        const processedAssignments = groupAssignments(assignments);
+        let dates = [ moment(start).format() ];
+        dates = dates.concat(enumerateDaysBetweenDates(start, end).map(date => moment(date).format()));
+        dates.push(moment(end).format());
+
+        const processedAssignments = groupAssignments(assignments, dates);
 
         res.send(processedAssignments);
     } catch (error) {
