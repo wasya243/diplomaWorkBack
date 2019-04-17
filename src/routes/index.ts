@@ -12,12 +12,14 @@ import { routes as requestRoutes } from './requests';
 import { routes as aRoutes } from './test';
 import { routes as assignmentsRoutes } from './assignments';
 import { routes as registrationRequestsRoutes } from './registration-requests';
+import { routes as termRoutes } from './terms';
 
 export const appRoutes = express.Router();
 
 appRoutes
     .use(aRoutes)
     .use(assignmentsRoutes)
+    .use(termRoutes)
     .use(registrationRequestsRoutes)
     .use(userRoutes)
     .use(permissionRoutes)

@@ -13,6 +13,8 @@ import {
     DoubleLesson,
     Request,
     Assignment,
+    Term,
+    Week,
     A
 } from './models';
 
@@ -58,6 +60,8 @@ export class DatabaseManager {
                     DoubleLesson,
                     Request,
                     Assignment,
+                    Term,
+                    Week,
                     A
                 ],
                 synchronize: true,

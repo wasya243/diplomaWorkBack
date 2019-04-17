@@ -10,4 +10,6 @@ export * from './Group';
 export * from './DoubleLesson';
 export * from './Request';
 export * from './Assignment';
+export * from './Term';
+export * from './Week';
 export * from './A';
