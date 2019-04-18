@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Faculty, Classroom } from '../../db/models';
+import { Faculty, Classroom, Group } from '../../db/models';
 
 export const getClassroomsByFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const facultyId = req.params.id;
@@ -102,3 +102,29 @@ export const createFaculty = async (req: express.Request, res: express.Response,
         next(error);
     }
 };
+
+export const getGroupsByFaculty = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const facultyId = req.params.id;
+
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const facultyRepository = connection.getRepository(Faculty);
+        const groupRepository = connection.getRepository(Group);
+
+        const faculty = await facultyRepository.findOne(facultyId);
+        if (!faculty) {
+            return next();
+        }
+
+        const groups = await groupRepository
+            .createQueryBuilder('group')
+            .where({ faculty })
+            .getMany();
+
+        res.send(groups);
+    } catch (error) {
+        next(error);
+    }
+};
+

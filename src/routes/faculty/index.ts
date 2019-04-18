@@ -2,11 +2,20 @@ import express from 'express';
 
 import { checkPermission } from '../../auth/middlewares/permission';
 import { authMiddleware } from '../../auth';
-import { getFaculties, deleteFaculty, updateFaculty, createFaculty, getClassroomsByFaculty } from './handlers';
+import {
+    getFaculties,
+    deleteFaculty,
+    updateFaculty,
+    createFaculty,
+    getClassroomsByFaculty,
+    getGroupsByFaculty
+} from './handlers';
 import { validate as createValidationMiddleWare } from '../../lib/middlewares';
 import { updateFacultySchema } from '../../lib/validation';
 
 export const routes = express.Router();
+
+routes.get('/faculties/:id/groups', authMiddleware, checkPermission.read('getGroupsByFaculty'), getGroupsByFaculty);
 
 routes.get('/faculties', getFaculties);
 
