@@ -105,6 +105,7 @@ export const createAssignment = async (req: express.Request, res: express.Respon
         assignment.classroom = classroom;
         assignment.doubleLesson = doubleLesson;
         assignment.group = group;
+        assignment.dispatcher = dispatcher as Dispatcher;
         assignment.assignmentDate = moment(assignmentDate).startOf('day').format();
 
         await assignmentRepository.save(assignment);
@@ -166,12 +167,15 @@ export const getAssignments = async (req: express.Request, res: express.Response
         const assignmentRepository = connection.getRepository(Assignment);
 
         const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
+        // get all dispatchers of current faculty
+        const dispatcherIds = (await dispatcherRepository.find({ faculty: dispatcher && dispatcher.faculty })).map(dispatcher => dispatcher.id);
+        // find assignments made by dispatchers of current faculty
         const assignments = await assignmentRepository
             .query(`
                 SELECT *
                 FROM assignment
                 INNER JOIN classroom ON assignment."classroomId" = classroom.id
-                WHERE classroom."facultyId" = ${dispatcher && dispatcher.faculty.id}
+                WHERE assignment."dispatcherId" IN (${dispatcherIds})
                 AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
             `);
 

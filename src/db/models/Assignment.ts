@@ -4,6 +4,7 @@ import moment from 'moment';
 import { Classroom } from './Сlassroom';
 import { Group } from './Group';
 import { DoubleLesson } from './DoubleLesson';
+import { Dispatcher } from './Dispatcher';
 
 @Unique([ 'classroom', 'doubleLesson', 'group', 'assignmentDate' ])
 
@@ -32,6 +33,11 @@ export class Assignment {
     @ManyToOne(type => Classroom, classroom => classroom.assignments, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore
     classroom: Classroom;
+
+    // who made an assignment
+    @ManyToOne(type => Dispatcher, dispatcher => dispatcher.assignments, { cascade: true, onDelete: 'CASCADE' })
+        //@ts-ignore
+    dispatcher: Dispatcher;
 
 }
 

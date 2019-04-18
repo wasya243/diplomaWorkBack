@@ -1,6 +1,6 @@
-import { Column, ChildEntity, ManyToOne } from 'typeorm';
+import { Column, ChildEntity, ManyToOne, OneToMany } from 'typeorm';
 
-import { Faculty, User } from '../models';
+import { Faculty, User, Assignment } from '../models';
 
 @ChildEntity()
 export class Dispatcher extends User {
@@ -12,4 +12,8 @@ export class Dispatcher extends User {
     @ManyToOne(type => Faculty, faculty => faculty.classrooms, { cascade: true, onDelete: 'CASCADE' })
         //@ts-ignore
     faculty: Faculty;
+
+    @OneToMany(type => Assignment, assignment => assignment.dispatcher)
+        //@ts-ignore
+    assignments: Assignment[];
 }
