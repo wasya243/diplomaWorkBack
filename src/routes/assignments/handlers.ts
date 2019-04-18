@@ -4,7 +4,7 @@ import createHttpError = require('http-errors');
 
 import { IClassroomUsageDBReport } from '../../types';
 import { DatabaseManager } from '../../db/database-manager';
-import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher } from '../../db/models';
+import { Assignment, Classroom, DoubleLesson, Group, Request, Dispatcher, User } from '../../db/models';
 import {
     isPassedToOtherFaculty,
     initReport,
@@ -173,8 +173,8 @@ export const getAssignments = async (req: express.Request, res: express.Response
         const assignments = await assignmentRepository
             .query(`
                 SELECT *
-                FROM assignment
-                INNER JOIN classroom ON assignment."classroomId" = classroom.id
+                FROM classroom
+                INNER JOIN assignment ON classroom.id = assignment."classroomId"
                 WHERE assignment."dispatcherId" IN (${dispatcherIds})
                 AND "assignmentDate" >= '${moment(start).format()}'::timestamptz AND "assignmentDate" <= '${moment(end).format()}'::timestamptz
             `);
@@ -186,6 +186,27 @@ export const getAssignments = async (req: express.Request, res: express.Response
         const processedAssignments = groupAssignments(assignments, dates);
 
         res.send(processedAssignments);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const removeAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // @ts-ignore
+    const assignmentId = req.params.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const assignmentRepository = connection.getRepository(Assignment);
+
+        const assignmentToRemove = await assignmentRepository.findOne(assignmentId);
+        if (!assignmentToRemove) {
+            return next();
+        }
+
+        await assignmentRepository.remove(assignmentToRemove);
+
+        res.status(204).end();
     } catch (error) {
         next(error);
     }
