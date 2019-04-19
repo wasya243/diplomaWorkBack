@@ -1,5 +1,6 @@
 import express from 'express';
 import createHttpError = require('http-errors');
+import moment from 'moment';
 
 import { DatabaseManager } from '../../db/database-manager';
 import { Assignment, Classroom, DoubleLesson, Faculty } from '../../db/models';
@@ -136,17 +137,26 @@ export const getFreeClassrooms = async (req: express.Request, res: express.Respo
             .where('faculty.id = :facultyId')
             .andWhere('assignment."assignmentDate" = :assignmentDate')
             .andWhere('assignment."doubleLessonId" = :doubleLessonId')
-            .setParameters({ facultyId, assignmentDate, doubleLessonId })
+            .setParameters({ facultyId, assignmentDate: moment(assignmentDate).format(), doubleLessonId })
             .getMany();
 
         const usedClassroomsIds = assignments.map(assignment => assignment.classroom.id);
-
-        const freeClassrooms = await classroomRepository
-            .createQueryBuilder('classroom')
-            .innerJoinAndSelect('classroom.faculty', 'faculty')
-            .where('classroom.id NOT IN (:...usedClassroomsIds)', { usedClassroomsIds })
-            .andWhere('faculty.id = :facultyId', { facultyId })
-            .getMany();
+        let freeClassrooms = [];
+        // if I pass an empty array an error will be thrown
+        if (usedClassroomsIds.length > 0) {
+            freeClassrooms = await classroomRepository
+                .createQueryBuilder('classroom')
+                .innerJoinAndSelect('classroom.faculty', 'faculty')
+                .where('classroom.id NOT IN (:...usedClassroomsIds)', { usedClassroomsIds })
+                .andWhere('faculty.id = :facultyId', { facultyId })
+                .getMany();
+        } else {
+            freeClassrooms = await classroomRepository
+                .createQueryBuilder('classroom')
+                .innerJoinAndSelect('classroom.faculty', 'faculty')
+                .where('faculty.id = :facultyId', { facultyId })
+                .getMany();
+        }
 
         res.send(freeClassrooms.map(classroom => Object.assign(classroom, {
             faculty: {
