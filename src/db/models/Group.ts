@@ -15,6 +15,14 @@ export class Group {
         //@ts-ignore
     name: string;
 
+    @Column({ default: 2015 })
+        //@ts-ignore
+    yearStart: number;
+
+    @Column({ default: 2019 })
+        //@ts-ignore
+    yearEnd: number;
+
     @Column()
         //@ts-ignore
     amountOfPeople: number;

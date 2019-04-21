@@ -51,6 +51,8 @@ export async function updateGroup(req: express.Request, res: express.Response, n
 
         groupToUpdate.name = groupData.name;
         groupToUpdate.amountOfPeople = groupData.amountOfPeople;
+        groupToUpdate.yearEnd = groupData.yearEnd;
+        groupToUpdate.yearStart = groupData.yearStart;
 
         await groupRepository.save(groupToUpdate);
 

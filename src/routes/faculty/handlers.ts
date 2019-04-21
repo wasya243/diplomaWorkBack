@@ -120,6 +120,8 @@ export const getGroupsByFaculty = async (req: express.Request, res: express.Resp
         const groups = await groupRepository
             .createQueryBuilder('group')
             .where({ faculty })
+            .innerJoinAndSelect('group.faculty', 'faculty')
+            .orderBy('"group"."yearStart"', 'DESC')
             .getMany();
 
         res.send(groups.map(group => Object.assign(group, { faculty: { id: group.faculty.id, name: group.faculty.name } })));
