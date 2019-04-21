@@ -122,7 +122,7 @@ export const getGroupsByFaculty = async (req: express.Request, res: express.Resp
             .where({ faculty })
             .getMany();
 
-        res.send(groups);
+        res.send(groups.map(group => Object.assign(group, { faculty: { id: group.faculty.id, name: group.faculty.name } })));
     } catch (error) {
         next(error);
     }

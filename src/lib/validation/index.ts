@@ -4,3 +4,4 @@ export * from './faculty';
 export * from './classroom';
 export * from './request';
 export * from './assignment';
+export * from './group';
