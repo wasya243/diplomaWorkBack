@@ -1,7 +1,8 @@
 import * as express from 'express';
+import createHttpError = require('http-errors');
 
 import { DatabaseManager } from '../../db/database-manager';
-import { Group } from '../../db/models';
+import { Faculty, Group } from '../../db/models';
 
 export async function getGroups(req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
@@ -67,3 +68,31 @@ export async function updateGroup(req: express.Request, res: express.Response, n
     }
 }
 
+export async function createGroup(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const groupData = req.body;
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const groupRepository = connection.getRepository(Group);
+        const facultyRepository = connection.getRepository(Faculty);
+
+        const faculty = await facultyRepository.findOne(groupData.facultyId);
+        if (!faculty) {
+            return next(createHttpError(404, `Faculty with provided id ${groupData.facultyId} is not found`));
+        }
+
+        const group = new Group();
+
+        group.faculty = faculty;
+        group.yearStart = groupData.yearStart;
+        group.yearEnd = groupData.yearEnd;
+        group.amountOfPeople = groupData.amountOfPeople;
+        group.name = groupData.name;
+
+        const savedGroup = await groupRepository.save(group);
+
+        res.send(savedGroup);
+    } catch (error) {
+        next(error);
+    }
+}
