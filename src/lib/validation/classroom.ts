@@ -12,7 +12,8 @@ export const getFreeClassroomsSchema = {
     query: {
         assignmentDate: Joi.string().regex(new RegExp('[0-9]{4}-[0-9]{2}-[0-9]{2}')),
         facultyId: Joi.string().regex(new RegExp('^[1-9]\\d*$')),
-        doubleLessonId: Joi.string().regex(new RegExp('^[1-9]\\d*$'))
+        doubleLessonId: Joi.string().regex(new RegExp('^[1-9]\\d*$')),
+        amountOfSeats: Joi.string().regex(new RegExp('^[1-9]\\d*$'))
     }
 };
 

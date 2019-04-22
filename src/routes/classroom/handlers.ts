@@ -1,6 +1,9 @@
 import express from 'express';
 import createHttpError = require('http-errors');
 import moment from 'moment';
+import { MoreThan } from 'typeorm';
+
+const MoreThanAmountOfSeats = (amountOfSeats: number) => MoreThan(amountOfSeats);
 
 import { DatabaseManager } from '../../db/database-manager';
 import { Assignment, Classroom, DoubleLesson, Faculty } from '../../db/models';
@@ -109,7 +112,12 @@ export const deleteClassroom = async (req: express.Request, res: express.Respons
 };
 
 export const getFreeClassrooms = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const { assignmentDate, facultyId, doubleLessonId } = req.query;
+    let { assignmentDate, facultyId, doubleLessonId, amountOfSeats } = req.query;
+
+    facultyId = parseInt(facultyId);
+    doubleLessonId = parseInt(doubleLessonId);
+    amountOfSeats = parseInt(amountOfSeats);
+
     // @ts-ignore
     try {
         const connection = DatabaseManager.getConnection();
@@ -149,12 +157,14 @@ export const getFreeClassrooms = async (req: express.Request, res: express.Respo
                 .innerJoinAndSelect('classroom.faculty', 'faculty')
                 .where('classroom.id NOT IN (:...usedClassroomsIds)', { usedClassroomsIds })
                 .andWhere('faculty.id = :facultyId', { facultyId })
+                .andWhere(`classroom.amountOfSeats >= ${amountOfSeats}`)
                 .getMany();
         } else {
             freeClassrooms = await classroomRepository
                 .createQueryBuilder('classroom')
                 .innerJoinAndSelect('classroom.faculty', 'faculty')
                 .where('faculty.id = :facultyId', { facultyId })
+                .andWhere(`classroom.amountOfSeats >= ${amountOfSeats}`)
                 .getMany();
         }
 
