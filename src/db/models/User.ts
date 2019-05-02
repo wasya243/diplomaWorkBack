@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, TableInheritance } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, TableInheritance, Index } from 'typeorm';
 
 import { Role } from './Role';
 
@@ -22,6 +22,7 @@ export class User {
         // @ts-ignore
     lastName: string;
 
+    @Index({ unique: true })
     @Column({
         length: 100
     })
