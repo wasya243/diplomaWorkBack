@@ -17,7 +17,6 @@ export const getReportSchema = {
     }
 };
 
-
 export const getAssignmentsSchema = {
     query: {
         start: Joi.string().regex(new RegExp('[0-9]{4}-[0-9]{2}-[0-9]{2}')),

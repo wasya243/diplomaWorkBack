@@ -211,3 +211,121 @@ export const removeAssignment = async (req: express.Request, res: express.Respon
         next(error);
     }
 };
+
+export const updateAssignment = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const { classroomId, groupId, doubleLessonId, assignmentDate } = req.body;
+    // @ts-ignore
+    const dispatcherId = req.userData.id;
+    const assignmentId = req.params.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+
+        const classroomRepository = connection.getRepository(Classroom);
+        const doubleLessonRepository = connection.getRepository(DoubleLesson);
+        const groupRepository = connection.getRepository(Group);
+        const requestRepository = connection.getRepository(Request);
+        const assignmentRepository = connection.getRepository(Assignment);
+        const dispatcherRepository = connection.getRepository(Dispatcher);
+
+        const dispatcher = await dispatcherRepository.findOne(dispatcherId, { relations: [ 'faculty' ] });
+        const classroom = await classroomRepository.findOne(classroomId, { relations: [ 'faculty' ] });
+        const doubleLesson = await doubleLessonRepository.findOne(doubleLessonId);
+        const assignmentToUpdate = await assignmentRepository.findOne(assignmentId, { relations: [ 'classroom', 'doubleLesson', 'group' ] });
+        const group = await groupRepository.findOne(groupId);
+
+        if (!assignmentToUpdate) {
+            return next();
+        }
+
+        if (!doubleLesson) {
+            return next(createHttpError(404, `Double lesson with provided id ${doubleLessonId} does not exist`));
+        }
+
+        if (!group) {
+            return next(createHttpError(404, `Group with provided id ${groupId} does not exist`));
+        }
+
+        if (!classroom) {
+            return next(createHttpError(404, `Classroom with provided id ${classroomId} does not exist`));
+        }
+
+        // check if given classroom is not passed over to other faculty
+        const requests = await requestRepository
+            .createQueryBuilder('request')
+            .where('request."classroomId" = :classroomId')
+            .andWhere('request.isApproved = true')
+            .setParameters({ classroomId: classroomId })
+            .getMany();
+
+        const doubleLessonStart = moment(doubleLesson.start);
+        const doubleLessonEnd = moment(doubleLesson.end);
+
+        const assignmentDateStart = moment(
+            moment(assignmentDate)
+                .startOf('day')
+                .add(doubleLessonStart.hours(), 'hours')
+                .add(doubleLessonStart.minutes(), 'minutes')
+                .format());
+        const assignmentDateEnd = moment(
+            moment(assignmentDate)
+                .startOf('day')
+                .add(doubleLessonEnd.hours(), 'hours')
+                .add(doubleLessonEnd.minutes(), 'minutes')
+                .format());
+
+
+        const isPassed = isPassedToOtherFaculty(assignmentDateStart, assignmentDateEnd, requests);
+
+        // if classroom belongs to the dispatcher sending the request
+        if ((dispatcher && dispatcher.faculty.id === classroom.faculty.id) && isPassed) {
+            return next(createHttpError(400, `This ${classroomId} classroom cannot be used during this period start ${assignmentDateStart} end ${assignmentDateEnd} cause it was passed to other faculty`));
+        }
+
+        // if classroom does not belong to the dispatcher sending the request
+        if ((dispatcher && dispatcher.faculty.id !== classroom.faculty.id) && !isPassed) {
+            return next(createHttpError(400, `This ${classroomId} classroom cannot be used during this period start ${assignmentDateStart} end ${assignmentDateEnd} cause it was not passed dispatcher with id ${dispatcher.id}`));
+        }
+
+
+        // check if there is enough space left in classroom
+        const assignments = await assignmentRepository
+            .createQueryBuilder('assignment')
+            .where('assignment."classroomId" = :classroomId')
+            .andWhere('assignment.assignmentDate = :assignmentDate')
+            .andWhere('assignment."doubleLessonId" = :doubleLessonId')
+            .setParameters({
+                doubleLessonId: doubleLessonId,
+                classroomId: classroomId,
+                assignmentDate: moment(assignmentDate).startOf('day').format()
+            })
+            .innerJoinAndSelect('assignment.group', 'group')
+            .getMany();
+        const amountOfPeople = assignments.reduce((ac, cu) => ac + cu.group.amountOfPeople, 0);
+
+        if ((classroom.amountOfSeats - amountOfPeople) < group.amountOfPeople) {
+            return next(createHttpError(400, `Classroom with id ${classroomId} has not enough space left for ${group.amountOfPeople} people in group with id ${group.id}`));
+        }
+
+        // it is a nightmare...
+
+        assignmentToUpdate.classroom = Object.assign(classroom, {
+            facultyId: classroom.faculty.id
+        });
+        Object.assign(assignmentToUpdate, {
+            groupId: assignmentToUpdate.group.id,
+            doubleLessonId: assignmentToUpdate.doubleLesson.id
+        });
+        delete assignmentToUpdate.classroom.faculty;
+        delete assignmentToUpdate.doubleLesson;
+        delete assignmentToUpdate.group;
+
+        await assignmentRepository.save(assignmentToUpdate);
+
+        assignmentToUpdate.createdAt = moment(assignmentToUpdate.createdAt).format();
+        assignmentToUpdate.assignmentDate = moment(assignmentToUpdate.assignmentDate).format();
+
+        res.send(assignmentToUpdate);
+    } catch (error) {
+        next(error);
+    }
+};

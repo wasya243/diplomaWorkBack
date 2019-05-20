@@ -37,6 +37,23 @@ export async function deleteGroup(req: express.Request, res: express.Response, n
     }
 }
 
+export async function getGroupById(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const groupId = req.params.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+        const groupRepository = connection.getRepository(Group);
+
+        const group = await groupRepository.findOne(groupId);
+        if (!group) {
+            return next();
+        }
+
+        res.send(group);
+
+    } catch (error) {
+        next(error);
+    }
+}
 
 export async function updateGroup(req: express.Request, res: express.Response, next: express.NextFunction) {
     const groupId = req.params.id;

@@ -16,3 +16,18 @@ export async function getDoubleLessons(req: express.Request, res: express.Respon
         next(error);
     }
 }
+
+export async function getDoubleLessonById(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const doubleLessonId = req.params.id;
+    try {
+        const connection = DatabaseManager.getConnection();
+        const doubleLessonRepository = connection.getRepository(DoubleLesson);
+        const doubleLesson = await doubleLessonRepository.findOne(doubleLessonId);
+        if (!doubleLesson) {
+            return next();
+        }
+        res.send(doubleLesson);
+    } catch (error) {
+        next(error);
+    }
+}
